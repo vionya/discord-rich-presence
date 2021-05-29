@@ -5,6 +5,7 @@ use std::error::Error;
 #[test]
 fn test_reconnect() -> Result<(), Box<dyn Error>> {
     let mut client = new_client("771124766517755954")?;
+    client.connect()?;
 
     loop {
         let payload = json!({
