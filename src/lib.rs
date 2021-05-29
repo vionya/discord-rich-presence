@@ -16,10 +16,11 @@ use ipc_windows as ipc;
 /// This method automatically creates and connects a client.
 pub fn new_client(client_id: &str) -> Result<impl DiscordIpc, Box<dyn std::error::Error>> {
     let mut client = ipc::DiscordIpcClient {
+        client_id: client_id.to_string(),
         connected: false,
         socket: None,
     };
 
-    client.connect(client_id)?;
+    client.connect()?;
     Ok(client)
 }

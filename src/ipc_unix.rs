@@ -16,6 +16,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
 pub struct DiscordIpcClient {
+    pub client_id: String,
     pub connected: bool,
     pub socket: Option<UnixStream>,
 }
@@ -25,12 +26,15 @@ impl DiscordIpc for DiscordIpcClient {
         let mut path: Option<PathBuf> = None;
 
         for i in 0..10 {
-            path = Some(DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i)));
+            let maybe_path =
+                DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
-            if !path.as_ref().unwrap().exists() {
-                continue;
-            } else {
-                break;
+            match UnixStream::connect(&maybe_path) {
+                Ok(_) => {
+                    path = Some(maybe_path);
+                    break;
+                }
+                Err(_) => continue,
             }
         }
 
@@ -74,6 +78,10 @@ impl DiscordIpc for DiscordIpcClient {
         };
 
         Ok(())
+    }
+
+    fn get_client_id(&self) -> &String {
+        &self.client_id
     }
 }
 
