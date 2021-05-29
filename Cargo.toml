@@ -3,6 +3,11 @@ name = "discord-rich-presence"
 version = "0.1.1"
 authors = ["sardonicism-04 <110789901+sardonicism-04@users.noreply.github.com>"]
 edition = "2018"
+description = "A simple, cross-platform crate for interfacing with Discord's IPC"
+readme = "README.md"
+repository = "https://github.com/sardonicism-04/discord-rich-presence"
+license = "MIT"
+keywords = ["discord", "rich-presence", "ipc"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
