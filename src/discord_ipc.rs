@@ -9,12 +9,25 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub trait DiscordIpc {
     /// Connects the client to the Discord IPC.
     /// This method is typically called automatically by the new_client function.
-    fn connect(&mut self, client_id: &str) -> Result<()> {
+    fn connect(&mut self) -> Result<()> {
         self.connect_ipc()?;
-        self.send_handshake(client_id)?;
+        self.send_handshake()?;
 
         Ok(())
     }
+
+    /// Reconnects to the Discord IPC.
+    /// Active connections will be closed.
+    fn reconnect(&mut self) -> Result<()> {
+        self.close()?;
+        self.connect_ipc()?;
+        self.send_handshake()?;
+
+        Ok(())
+    }
+
+    #[doc(hidden)]
+    fn get_client_id(&self) -> &String;
 
     /// Tries to find a valid socket to connect to.
     fn get_valid_path(&mut self) -> Result<Option<std::path::PathBuf>>;
@@ -23,11 +36,11 @@ pub trait DiscordIpc {
     fn connect_ipc(&mut self) -> Result<()>;
 
     /// Handshakes the Discord IPC. Usually called automatically by `connect`
-    fn send_handshake(&mut self, client_id: &str) -> Result<()> {
+    fn send_handshake(&mut self) -> Result<()> {
         self.send(
             json!({
                 "v": 1,
-                "client_id": client_id
+                "client_id": self.get_client_id()
             }),
             0,
         )?;
