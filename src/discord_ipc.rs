@@ -9,6 +9,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub trait DiscordIpc {
     /// Connects the client to the Discord IPC.
     /// This method is typically called automatically by the new_client function.
+    fn connect(&mut self, client_id: &str) -> Result<()> {
         self.connect_ipc()?;
         self.send_handshake(client_id)?;
 
@@ -19,6 +20,7 @@ pub trait DiscordIpc {
     fn connect_ipc(&mut self) -> Result<()>;
 
     /// Handshakes the Discord IPC. Usually called automatically by `connect`
+    fn send_handshake(&mut self, client_id: &str) -> Result<()> {
         self.send(
             json!({
                 "v": 1,
@@ -46,7 +48,6 @@ pub trait DiscordIpc {
     fn write(&mut self, data: &[u8]) -> Result<()>;
 
     /// Receives an opcode and JSON data from the Discord IPC.
-
     fn recv(&mut self) -> Result<(u32, Value)> {
         let mut header = [0; 8];
 

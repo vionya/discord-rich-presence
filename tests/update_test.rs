@@ -4,7 +4,7 @@ use std::error::Error;
 
 #[test]
 fn test_updating() -> Result<(), Box<dyn Error>> {
-    let mut client = new_client("771124766517755954".to_string())?;
+    let mut client = new_client("771124766517755954")?;
 
     client.set_activity(json!({
         "state": "part 1 (test)",
