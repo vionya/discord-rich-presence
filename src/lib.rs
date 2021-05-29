@@ -12,9 +12,8 @@ mod ipc_windows;
 #[cfg(windows)]
 use ipc_windows as ipc;
 
-use ipc::*;
-
-pub fn new_client(client_id: String) -> Result<DiscordIpcClient, Box<dyn std::error::Error>> {
+/// Creates a new client to connect to the Discord IPC.
+/// This method automatically creates and connects a client.
     let mut client = ipc::DiscordIpcClient {
         connected: false,
         socket: None,

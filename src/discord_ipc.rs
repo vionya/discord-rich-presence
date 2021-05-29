@@ -5,17 +5,20 @@ use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
+/// A client that connects to and communicates with the Discord IPC.
 pub trait DiscordIpc {
-    fn connect(&mut self, client_id: String) -> Result<()> {
+    /// Connects the client to the Discord IPC.
+    /// This method is typically called automatically by the new_client function.
         self.connect_ipc()?;
         self.send_handshake(client_id)?;
 
         Ok(())
     }
 
+    #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
 
-    fn send_handshake(&mut self, client_id: String) -> Result<()> {
+    /// Handshakes the Discord IPC. Usually called automatically by `connect`
         self.send(
             json!({
                 "v": 1,
@@ -28,6 +31,7 @@ pub trait DiscordIpc {
         Ok(())
     }
 
+    /// Sends JSON data to the Discord IPC.
     fn send(&mut self, data: serde_json::Value, opcode: u8) -> Result<()> {
         let data_string = data.to_string();
         let header = pack(opcode.into(), data_string.len() as u32)?;
@@ -38,7 +42,10 @@ pub trait DiscordIpc {
         Ok(())
     }
 
+    #[doc(hidden)]
     fn write(&mut self, data: &[u8]) -> Result<()>;
+
+    /// Receives an opcode and JSON data from the Discord IPC.
 
     fn recv(&mut self) -> Result<(u32, Value)> {
         let mut header = [0; 8];
@@ -55,8 +62,10 @@ pub trait DiscordIpc {
         Ok((op, json_data))
     }
 
+    #[doc(hidden)]
     fn read(&mut self, buffer: &mut [u8]) -> Result<()>;
 
+    /// An abstraction for sending rich presence data to the IPC such that only the presence's JSON payload is required.
     fn set_activity(&mut self, activity_payload: Value) -> Result<()> {
         let data = json!({
             "cmd": "SET_ACTIVITY",
@@ -71,5 +80,6 @@ pub trait DiscordIpc {
         Ok(())
     }
 
+    /// Closes the Discord IPC connection. Implementation is dependent on platform.
     fn close(&mut self) -> Result<()>;
 }
