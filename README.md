@@ -2,8 +2,7 @@
 A simple, cross-platform crate to connect and send data to Discord's IPC. Special attention is given to sending rich presence data.
 
 ## Example
----
-```rs
+```rust
 use discord_rich_presence::{new_client, DiscordIpc};
 use serde_json::json;
 
