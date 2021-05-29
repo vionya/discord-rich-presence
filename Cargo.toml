@@ -1,6 +1,6 @@
 [package]
 name = "discord-rich-presence"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["nickofolas <60761231+nickofolas@users.noreply.github.com>"]
 edition = "2018"
 description = "A simple, cross-platform crate for interfacing with Discord's IPC"
