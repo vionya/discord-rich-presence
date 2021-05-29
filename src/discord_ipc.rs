@@ -16,6 +16,9 @@ pub trait DiscordIpc {
         Ok(())
     }
 
+    /// Tries to find a valid socket to connect to.
+    fn get_valid_path(&mut self) -> Result<Option<std::path::PathBuf>>;
+
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
 
