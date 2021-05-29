@@ -1,4 +1,8 @@
 # Discord Rich Presence
+[![crates.io](https://img.shields.io/crates/v/discord-rich-presence.svg)](https://crates.io/crates/discord-rich-presence)
+[![Docs](https://docs.rs/discord-rich-presence/badge.svg?version=0.1.1)](https://docs.rs/discord-rich-presence)
+
+
 A simple, cross-platform crate to connect and send data to Discord's IPC. Special attention is given to sending rich presence data.
 
 ## Example
