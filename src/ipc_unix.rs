@@ -21,19 +21,24 @@ pub struct DiscordIpcClient {
 }
 
 impl DiscordIpc for DiscordIpcClient {
-    fn connect_ipc(&mut self) -> Result<()> {
-        let mut path: PathBuf = PathBuf::new();
+    fn get_valid_path(&mut self) -> Result<Option<PathBuf>> {
+        let mut path: Option<PathBuf> = None;
 
         for i in 0..10 {
-            path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
+            path = Some(DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i)));
 
-            if !path.exists() {
+            if !path.as_ref().unwrap().exists() {
                 continue;
             } else {
                 break;
             }
         }
 
+        Ok(path)
+    }
+
+    fn connect_ipc(&mut self) -> Result<()> {
+        let path = self.get_valid_path()?.unwrap();
         let socket = UnixStream::connect(path).expect("Failed to open socket");
         self.socket = Some(socket);
 
