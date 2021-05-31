@@ -1,6 +1,6 @@
 [package]
 name = "discord-rich-presence"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["sardonicism-04 <110789901+sardonicism-04@users.noreply.github.com>"]
 edition = "2018"
 description = "A simple, cross-platform crate for interfacing with Discord's IPC"
@@ -13,6 +13,7 @@ keywords = ["discord", "rich-presence", "ipc"]
 
 [dependencies]
 serde_json = "1.0"
+serde = "1.0.126"
 uuid = { version = "0.8", features = ["v4"] }
 
 [target.'cfg(windows)'.dependencies]

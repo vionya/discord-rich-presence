@@ -60,9 +60,6 @@ pub trait DiscordIpc {
     #[doc(hidden)]
     fn get_client_id(&self) -> &String;
 
-    /// Tries to find a valid socket to connect to.
-    fn get_valid_path(&mut self) -> Result<Option<std::path::PathBuf>>;
-
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
 
@@ -86,6 +83,7 @@ pub trait DiscordIpc {
             }),
             0,
         )?;
+        // TODO: Return an Err if the handshake is rejected
         self.recv()?;
 
         Ok(())
@@ -106,6 +104,8 @@ pub trait DiscordIpc {
     /// let payload = serde_json::json!({ "field": "value" });
     /// client.send(payload, 0)?;
     /// ```
+    fn send(&mut self, data: impl serde::Serialize, opcode: u8) -> Result<()> {
+        let data_string = serde_json::to_string(&data)?;
         let header = pack(opcode.into(), data_string.len() as u32)?;
 
         self.write(&header)?;
@@ -161,6 +161,7 @@ pub trait DiscordIpc {
     /// 
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
+    fn set_activity(&mut self, activity_payload: impl serde::Serialize) -> Result<()> {
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {
