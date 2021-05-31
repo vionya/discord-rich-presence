@@ -8,7 +8,21 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 /// A client that connects to and communicates with the Discord IPC.
 pub trait DiscordIpc {
     /// Connects the client to the Discord IPC.
-    /// This method is typically called automatically by the new_client function.
+    /// 
+    /// This method attempts to first establish a connection,
+    /// and then sends a handshake.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an `Err` variant if the client
+    /// failed to connect to the socket, or if it failed to
+    /// send a handshake.
+    /// 
+    /// # Examples
+    /// ```
+    /// let mut client = discord_rich_presence::new_client("<some client id>")?;
+    /// client.connect()?;
+    /// ```
     fn connect(&mut self) -> Result<()> {
         self.connect_ipc()?;
         self.send_handshake()?;
@@ -17,7 +31,24 @@ pub trait DiscordIpc {
     }
 
     /// Reconnects to the Discord IPC.
-    /// Active connections will be closed.
+    ///
+    /// This method closes the client's active connection,
+    /// then re-connects it and re-sends a handshake.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an `Err` variant if the client
+    /// failed to connect to the socket, or if it failed to
+    /// send a handshake.
+    /// 
+    /// # Examples
+    /// ```
+    /// let mut client = discord_rich_presence::new_client("<some client id>")?;
+    /// client.connect()?;
+    /// 
+    /// client.close()?;
+    /// client.reconnect()?;
+    /// ```
     fn reconnect(&mut self) -> Result<()> {
         self.close()?;
         self.connect_ipc()?;
@@ -35,7 +66,18 @@ pub trait DiscordIpc {
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
 
-    /// Handshakes the Discord IPC. Usually called automatically by `connect`
+    /// Handshakes the Discord IPC.
+    /// 
+    /// This method sends the handshake signal to the IPC.
+    /// It is usually not called manually, as it is automatically
+    /// called by [`connect`] and/or [`reconnect`].
+    /// 
+    /// [`connect`]: #method.connect
+    /// [`reconnect`]: #method.reconnect
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an `Err` variant if sending the handshake failed.
     fn send_handshake(&mut self) -> Result<()> {
         self.send(
             json!({
@@ -50,8 +92,20 @@ pub trait DiscordIpc {
     }
 
     /// Sends JSON data to the Discord IPC.
-    fn send(&mut self, data: serde_json::Value, opcode: u8) -> Result<()> {
-        let data_string = data.to_string();
+    /// 
+    /// This method takes data (must implement `serde::Serialize`) and
+    /// an opcode as its parameters.
+    /// 
+    /// # Errors
+    /// Returns an `Err` variant if:
+    /// * The data could not be serialized as JSON
+    /// * Writing to the socket failed
+    /// 
+    /// # Examples
+    /// ```
+    /// let payload = serde_json::json!({ "field": "value" });
+    /// client.send(payload, 0)?;
+    /// ```
         let header = pack(opcode.into(), data_string.len() as u32)?;
 
         self.write(&header)?;
@@ -64,6 +118,21 @@ pub trait DiscordIpc {
     fn write(&mut self, data: &[u8]) -> Result<()>;
 
     /// Receives an opcode and JSON data from the Discord IPC.
+    /// 
+    /// This method returns any data received from the IPC.
+    /// It returns a tuple containing the opcode, and the JSON data.
+    /// 
+    /// # Errors
+    /// Returns an `Err` variant if reading the socket was
+    /// unsuccessful.
+    /// 
+    /// # Examples
+    /// ```
+    /// client.connect_ipc()?;
+    /// client.send_handshake()?;
+    /// 
+    /// println!("{:?}", client.recv()?);
+    /// ```
     fn recv(&mut self) -> Result<(u32, Value)> {
         let mut header = [0; 8];
 
@@ -82,8 +151,16 @@ pub trait DiscordIpc {
     #[doc(hidden)]
     fn read(&mut self, buffer: &mut [u8]) -> Result<()>;
 
-    /// An abstraction for sending rich presence data to the IPC such that only the presence's JSON payload is required.
-    fn set_activity(&mut self, activity_payload: Value) -> Result<()> {
+    /// Sets a Discord activity.
+    /// 
+    /// This method is an abstraction of [`send`],
+    /// wrapping it such that only an activity payload
+    /// is required.
+    /// 
+    /// [`send`]: #method.send
+    /// 
+    /// # Errors
+    /// Returns an `Err` variant if sending the payload failed.
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {

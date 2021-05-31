@@ -1,3 +1,26 @@
+//! This library provides easy access to the Discord IPC.
+//! 
+//! It provides implementations for both Unix and Windows
+//! operating systems, with both implementations using the
+//! same API. Thus, this crate can be used in a platform-agnostic
+//! manner.
+//! 
+//! # Hello world
+//! ```
+//! use discord_rich_presence::{new_client, DiscordIpc};
+//! use serde_json::json;
+//! 
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let client = new_client("<some client id>")?;
+//!     client.connect()?;
+//! 
+//!     let payload = json!({
+//!         "state": "Hello world!"
+//!     });
+//!     client.set_activity(payload)?;
+//! }
+//! ```
+
 mod discord_ipc;
 mod pack_unpack;
 pub use discord_ipc::*;
@@ -12,8 +35,13 @@ mod ipc_windows;
 #[cfg(windows)]
 use ipc_windows as ipc;
 
+
 /// Creates a new client to connect to the Discord IPC.
-/// This method automatically creates and connects a client.
+/// 
+/// # Examples
+/// ```
+/// let ipc_client = discord_ipc_client::new_client("<some client id>")?;
+/// ```
 pub fn new_client(client_id: &str) -> Result<impl DiscordIpc, Box<dyn std::error::Error>> {
     let client = ipc::DiscordIpcClient {
         client_id: client_id.to_string(),
