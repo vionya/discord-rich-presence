@@ -24,6 +24,7 @@
 mod discord_ipc;
 mod pack_unpack;
 pub use discord_ipc::*;
+pub mod activity;
 
 #[cfg(unix)]
 mod ipc_unix;
