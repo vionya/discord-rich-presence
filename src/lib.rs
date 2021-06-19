@@ -7,19 +7,17 @@
 //! 
 //! # Hello world
 //! ```
-//! use discord_rich_presence::{new_client, DiscordIpc};
-//! use serde_json::json;
+//! use discord_rich_presence::{activity, new_client, DiscordIpc};
 //! 
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let client = new_client("<some client id>")?;
 //!     client.connect()?;
 //! 
-//!     let payload = json!({
-//!         "state": "Hello world!"
-//!     });
+//!     let payload = activity::Activity::new().state("Hello world!");
 //!     client.set_activity(payload)?;
 //! }
 //! ```
+#![deny(missing_docs)]
 
 mod discord_ipc;
 mod pack_unpack;
