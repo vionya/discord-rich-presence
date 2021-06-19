@@ -1,5 +1,4 @@
-use discord_rich_presence::{new_client, DiscordIpc};
-use serde_json::json;
+use discord_rich_presence::{activity, new_client, DiscordIpc};
 use std::error::Error;
 
 #[test]
@@ -12,14 +11,14 @@ fn test_reconnect() -> Result<(), Box<dyn Error>> {
     }
 
     loop {
-        let payload = json!({
-            "state": "part 1 (test)",
-            "details": "a placeholder",
-            "assets": {
-                "large_text": "a thing",
-                "large_image": "large-image"
-            }
-        });
+        let payload = activity::Activity::new()
+            .state("part 1 (test)")
+            .details("a placeholder")
+            .assets(
+                activity::Assets::new()
+                    .large_image("large-image")
+                    .large_text("a thing"),
+            );
 
         if client.set_activity(payload).is_err() && client.reconnect().is_ok() {
             continue;
