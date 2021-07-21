@@ -3,7 +3,7 @@
 use serde_derive::Serialize;
 
 /// A struct representing a Discord rich presence activity
-/// 
+///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
 #[derive(Serialize, Clone)]
@@ -31,20 +31,20 @@ pub struct Activity<'a> {
 }
 
 /// A struct representing an `Activity`'s timestamps
-/// 
+///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
 #[derive(Serialize, Clone)]
 pub struct Timestamps {
     #[serde(skip_serializing_if = "Option::is_none")]
-    start: Option<i32>,
+    start: Option<i64>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    end: Option<i32>,
+    end: Option<i64>,
 }
 
 /// A struct representing an `Activity`'s game party
-/// 
+///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
 #[derive(Serialize, Clone)]
@@ -58,7 +58,7 @@ pub struct Party<'a> {
 
 /// A struct representing the art assets and hover text
 /// used by an `Activity`
-/// 
+///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
 #[derive(Serialize, Clone)]
@@ -78,7 +78,7 @@ pub struct Assets<'a> {
 
 /// A struct representing the secrets used by an
 /// `Activity`
-/// 
+///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
 #[derive(Serialize, Clone)]
@@ -95,7 +95,7 @@ pub struct Secrets<'a> {
 
 /// A struct representing the buttons that are
 /// attached to an `Activity`
-/// 
+///
 /// An activity may have a maximum of 2 buttons
 #[derive(Serialize, Clone)]
 pub struct Button<'a> {
@@ -154,7 +154,7 @@ impl<'a> Activity<'a> {
     }
 
     /// Add a `Vec` of `Button`s to this activity
-    /// 
+    ///
     /// An activity may contain no more than 2 buttons
     pub fn buttons(mut self, buttons: Vec<Button<'a>>) -> Self {
         self.buttons = Some(buttons);
@@ -172,13 +172,13 @@ impl Timestamps {
     }
 
     /// Sets the start time
-    pub fn start(mut self, start: i32) -> Self {
+    pub fn start(mut self, start: i64) -> Self {
         self.start = Some(start);
         self
     }
 
     /// Sets the end time
-    pub fn end(mut self, end: i32) -> Self {
+    pub fn end(mut self, end: i64) -> Self {
         self.end = Some(end);
         self
     }
@@ -200,7 +200,7 @@ impl<'a> Party<'a> {
     }
 
     /// Sets the size of the party (current and maximum)
-    /// 
+    ///
     /// # Example
     /// ```
     /// // Creates a party with a current size
@@ -285,9 +285,9 @@ impl<'a> Secrets<'a> {
 impl<'a> Button<'a> {
     /// Creates a new `Button` with the given label and
     /// URL
-    /// 
+    ///
     /// The label must be 1-32 characters long
-    /// 
+    ///
     /// The URL must be 1-512 characters long
     pub fn new(label: &'a str, url: &'a str) -> Self {
         Button { label, url }
