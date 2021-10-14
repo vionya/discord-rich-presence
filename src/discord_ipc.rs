@@ -1,4 +1,7 @@
-use crate::pack_unpack::{pack, unpack};
+use crate::{
+    activity::Activity,
+    pack_unpack::{pack, unpack},
+};
 use serde_json::{json, Value};
 use std::error::Error;
 use uuid::Uuid;
@@ -77,10 +80,11 @@ pub trait DiscordIpc {
     /// Returns an `Err` variant if sending the handshake failed.
     fn send_handshake(&mut self) -> Result<()> {
         self.send(
-            json!({
+            &json!({
                 "v": 1,
                 "client_id": self.get_client_id()
-            }),
+            })
+            .to_string(),
             0,
         )?;
         // TODO: Return an Err if the handshake is rejected
@@ -104,7 +108,7 @@ pub trait DiscordIpc {
     /// let payload = serde_json::json!({ "field": "value" });
     /// client.send(payload, 0)?;
     /// ```
-    fn send(&mut self, data: impl serde::Serialize, opcode: u8) -> Result<()> {
+    fn send(&mut self, data: &str, opcode: u8) -> Result<()> {
         let data_string = serde_json::to_string(&data)?;
         let header = pack(opcode.into(), data_string.len() as u32)?;
 
@@ -161,7 +165,7 @@ pub trait DiscordIpc {
     /// 
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
-    fn set_activity(&mut self, activity_payload: impl serde::Serialize) -> Result<()> {
+    fn set_activity(&mut self, activity_payload: Activity) -> Result<()> {
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {
@@ -170,7 +174,7 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        self.send(data, 1)?;
+        self.send(&data.to_string(), 1)?;
 
         Ok(())
     }
