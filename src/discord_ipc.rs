@@ -80,11 +80,10 @@ pub trait DiscordIpc {
     /// Returns an `Err` variant if sending the handshake failed.
     fn send_handshake(&mut self) -> Result<()> {
         self.send(
-            &json!({
+            json!({
                 "v": 1,
                 "client_id": self.get_client_id()
-            })
-            .to_string(),
+            }),
             0,
         )?;
         // TODO: Return an Err if the handshake is rejected
@@ -95,7 +94,7 @@ pub trait DiscordIpc {
 
     /// Sends JSON data to the Discord IPC.
     /// 
-    /// This method takes data (must implement `serde::Serialize`) and
+    /// This method takes data (`serde_json::Value`) and
     /// an opcode as its parameters.
     /// 
     /// # Errors
@@ -108,11 +107,12 @@ pub trait DiscordIpc {
     /// let payload = serde_json::json!({ "field": "value" });
     /// client.send(payload, 0)?;
     /// ```
-    fn send(&mut self, data: &str, opcode: u8) -> Result<()> {
-        let header = pack(opcode.into(), data.len() as u32)?;
+    fn send(&mut self, data: Value, opcode: u8) -> Result<()> {
+        let data_string = data.to_string();
+        let header = pack(opcode.into(), data_string.len() as u32)?;
 
         self.write(&header)?;
-        self.write(data.as_bytes())?;
+        self.write(data_string.as_bytes())?;
 
         Ok(())
     }
@@ -173,7 +173,7 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        self.send(&data.to_string(), 1)?;
+        self.send(data, 1)?;
 
         Ok(())
     }
