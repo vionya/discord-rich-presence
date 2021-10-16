@@ -109,11 +109,10 @@ pub trait DiscordIpc {
     /// client.send(payload, 0)?;
     /// ```
     fn send(&mut self, data: &str, opcode: u8) -> Result<()> {
-        let data_string = serde_json::to_string(&data)?;
-        let header = pack(opcode.into(), data_string.len() as u32)?;
+        let header = pack(opcode.into(), data.len() as u32)?;
 
         self.write(&header)?;
-        self.write(data_string.as_bytes())?;
+        self.write(data.as_bytes())?;
 
         Ok(())
     }
