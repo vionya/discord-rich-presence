@@ -98,9 +98,7 @@ pub trait DiscordIpc {
     /// an opcode as its parameters.
     /// 
     /// # Errors
-    /// Returns an `Err` variant if:
-    /// * The data could not be serialized as JSON
-    /// * Writing to the socket failed
+    /// Returns an `Err` variant if writing to the socket failed
     /// 
     /// # Examples
     /// ```
