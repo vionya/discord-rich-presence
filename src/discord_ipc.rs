@@ -1,4 +1,7 @@
-use crate::pack_unpack::{pack, unpack};
+use crate::{
+    activity::Activity,
+    pack_unpack::{pack, unpack},
+};
 use serde_json::{json, Value};
 use std::error::Error;
 use uuid::Uuid;
@@ -91,21 +94,19 @@ pub trait DiscordIpc {
 
     /// Sends JSON data to the Discord IPC.
     /// 
-    /// This method takes data (must implement `serde::Serialize`) and
+    /// This method takes data (`serde_json::Value`) and
     /// an opcode as its parameters.
     /// 
     /// # Errors
-    /// Returns an `Err` variant if:
-    /// * The data could not be serialized as JSON
-    /// * Writing to the socket failed
+    /// Returns an `Err` variant if writing to the socket failed
     /// 
     /// # Examples
     /// ```
     /// let payload = serde_json::json!({ "field": "value" });
     /// client.send(payload, 0)?;
     /// ```
-    fn send(&mut self, data: impl serde::Serialize, opcode: u8) -> Result<()> {
-        let data_string = serde_json::to_string(&data)?;
+    fn send(&mut self, data: Value, opcode: u8) -> Result<()> {
+        let data_string = data.to_string();
         let header = pack(opcode.into(), data_string.len() as u32)?;
 
         self.write(&header)?;
@@ -161,7 +162,7 @@ pub trait DiscordIpc {
     /// 
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
-    fn set_activity(&mut self, activity_payload: impl serde::Serialize) -> Result<()> {
+    fn set_activity(&mut self, activity_payload: Activity) -> Result<()> {
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {
