@@ -244,6 +244,9 @@ impl<'a> Assets<'a> {
 
     /// Sets the name of the art asset to be used as the large
     /// image
+    ///
+    /// Alternatively, the URL of the resource to be used as
+    /// the large image
     pub fn large_image(mut self, large_image: &'a str) -> Self {
         self.large_image = Some(large_image);
         self
@@ -258,6 +261,9 @@ impl<'a> Assets<'a> {
 
     /// Sets the name of the art asset to be used as the small
     /// image
+    ///
+    /// Alternatively, the URL of the resource to be used as
+    /// the small image
     pub fn small_image(mut self, small_image: &'a str) -> Self {
         self.small_image = Some(small_image);
         self
