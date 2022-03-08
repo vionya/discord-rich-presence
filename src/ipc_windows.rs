@@ -21,7 +21,7 @@ pub struct DiscordIpcClient {
 
 impl DiscordIpcClient {
     /// Creates a new `DiscordIpcClient`.
-    /// 
+    ///
     /// # Examples
     /// ```
     /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
