@@ -37,7 +37,8 @@ use ipc_windows as ipc;
 pub use ipc::DiscordIpcClient;
 
 #[deprecated(since = "0.2.0", note = "use DiscordIpcClient::new() instead")]
-/// Creates a new client to connect to the Discord IPC.
+/// Creates a new client to connect to the Discord IPC. Functionally
+/// identical to [`DiscordIpcClient::new()`].
 ///
 /// # Examples
 /// ```
