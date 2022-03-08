@@ -1,5 +1,5 @@
 //! Provides an interface for building activities to send
-//! to Discord via `set_activity`
+//! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
 use serde_derive::Serialize;
 
 /// A struct representing a Discord rich presence activity
