@@ -15,10 +15,46 @@ const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
+#[derive(Clone, Copy)]
+/// A client that connects to and communicates with the Discord IPC.
 pub struct DiscordIpcClient {
+    /// Client ID of the IPC client.
     pub client_id: String,
-    pub connected: bool,
-    pub socket: Option<UnixStream>,
+    connected: bool,
+    socket: Option<PipeStream>,
+}
+
+impl DiscordIpcClient {
+    /// Creates a new `DiscordIpcClient`.
+    ///
+    /// # Examples
+    /// ```
+    /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
+    /// ```
+    pub fn new(client_id: &str) -> Result<Self> {
+        let client = Self {
+            client_id: client_id.to_string(),
+            connected: false,
+            socket: None,
+        };
+
+        Ok(client)
+    }
+
+    fn get_pipe_pattern() -> PathBuf {
+        let mut path = String::new();
+
+        for key in &ENV_KEYS {
+            match var(key) {
+                Ok(val) => {
+                    path = val;
+                    break;
+                }
+                Err(_e) => continue,
+            }
+        }
+        PathBuf::from(path)
+    }
 }
 
 impl DiscordIpc for DiscordIpcClient {
@@ -71,22 +107,5 @@ impl DiscordIpc for DiscordIpcClient {
 
     fn get_client_id(&self) -> &String {
         &self.client_id
-    }
-}
-
-impl DiscordIpcClient {
-    fn get_pipe_pattern() -> PathBuf {
-        let mut path = String::new();
-
-        for key in &ENV_KEYS {
-            match var(key) {
-                Ok(val) => {
-                    path = val;
-                    break;
-                }
-                Err(_e) => continue,
-            }
-        }
-        PathBuf::from(path)
     }
 }
