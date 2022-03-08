@@ -15,7 +15,6 @@ const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
-#[derive(Clone, Copy)]
 /// A client that connects to and communicates with the Discord IPC.
 pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
