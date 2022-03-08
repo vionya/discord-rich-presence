@@ -1,9 +1,9 @@
-use discord_rich_presence::{activity, new_client, DiscordIpc};
+use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use std::error::Error;
 
 #[test]
 fn test_models() -> Result<(), Box<dyn Error>> {
-    let mut client = new_client("771124766517755954")?;
+    let mut client = DiscordIpcClient::new("771124766517755954")?;
     client.connect()?;
 
     let activity = activity::Activity::new()

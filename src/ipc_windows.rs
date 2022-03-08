@@ -10,10 +10,30 @@ use windows_named_pipe::PipeStream;
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
+/// A client that connects to and communicates with the Discord IPC.
 pub struct DiscordIpcClient {
+    /// Client ID of the IPC client.
     pub client_id: String,
-    pub connected: bool,
-    pub socket: Option<PipeStream>,
+    connected: bool,
+    socket: Option<PipeStream>,
+}
+
+impl DiscordIpcClient {
+    /// Creates a new `DiscordIpcClient`.
+    /// 
+    /// # Examples
+    /// ```
+    /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
+    /// ```
+    pub fn new(client_id: &str) -> Result<Self> {
+        let client = Self {
+            client_id: client_id.to_string(),
+            connected: false,
+            socket: None,
+        };
+
+        Ok(client)
+    }
 }
 
 impl DiscordIpc for DiscordIpcClient {
