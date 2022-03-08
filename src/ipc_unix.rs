@@ -20,7 +20,7 @@ pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
     pub client_id: String,
     connected: bool,
-    socket: Option<PipeStream>,
+    socket: Option<UnixStream>,
 }
 
 impl DiscordIpcClient {
