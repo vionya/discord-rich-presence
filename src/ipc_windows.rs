@@ -10,7 +10,8 @@ use windows_named_pipe::PipeStream;
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
-/// A client that connects to and communicates with the Discord IPC.
+/// A wrapper struct for the functionality contained in the
+/// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
 pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
     pub client_id: String,
