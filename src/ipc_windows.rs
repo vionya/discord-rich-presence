@@ -2,10 +2,11 @@ use crate::discord_ipc::DiscordIpc;
 use serde_json::json;
 use std::{
     error::Error,
+    fs::{File, OpenOptions},
     io::{Read, Write},
+    os::windows::fs::OpenOptionsExt,
     path::PathBuf,
 };
-use windows_named_pipe::PipeStream;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -16,7 +17,7 @@ pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
     pub client_id: String,
     connected: bool,
-    socket: Option<PipeStream>,
+    socket: Option<File>,
 }
 
 impl DiscordIpcClient {
@@ -42,9 +43,9 @@ impl DiscordIpc for DiscordIpcClient {
         for i in 0..10 {
             let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{}", i));
 
-            match PipeStream::connect(&path) {
-                Ok(socket) => {
-                    self.socket = Some(socket);
+            match OpenOptions::new().access_mode(0x3).open(&path) {
+                Ok(handle) => {
+                    self.socket = Some(handle);
                     return Ok(());
                 }
                 Err(_) => continue,
@@ -74,7 +75,8 @@ impl DiscordIpc for DiscordIpcClient {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
-        self.socket.as_mut().unwrap().flush()?;
+        let socket = self.socket.as_mut().unwrap();
+        socket.flush()?;
 
         Ok(())
     }
