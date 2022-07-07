@@ -269,7 +269,7 @@ impl<'a> Assets<'a> {
         self
     }
 
-    /// Sets the text that is shown when hoverinf over the small
+    /// Sets the text that is shown when hovering over the small
     /// image
     pub fn small_text(mut self, small_text: &'a str) -> Self {
         self.small_text = Some(small_text);
