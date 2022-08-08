@@ -20,7 +20,7 @@ pub trait DiscordIpc {
     /// # Errors
     ///
     /// Returns an `Err` variant if the client
-    /// failed to connect to the socket, or if it failed to
+    /// fails to connect to the socket, or if it fails to
     /// send a handshake.
     ///
     /// # Examples
