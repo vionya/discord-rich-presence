@@ -75,7 +75,7 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().unwrap();
+        let socket = self.socket.as_mut().expect("Client not connected");
 
         socket.write_all(data)?;
 
