@@ -16,7 +16,7 @@ fn test_models() -> Result<(), Box<dyn Error>> {
         )
         .buttons(vec![activity::Button::new(
             "A button",
-            "https://sardonicism-04/com",
+            "https://github.com",
         )]);
     client.set_activity(activity)?;
 

@@ -157,6 +157,12 @@ impl<'a> Activity<'a> {
     ///
     /// An activity may contain no more than 2 buttons
     pub fn buttons(mut self, buttons: Vec<Button<'a>>) -> Self {
+        // API call fails if the array is empty, so we skip serialization
+        // entirely if this is the case
+        if buttons.is_empty() {
+            return self;
+        }
+
         self.buttons = Some(buttons);
         self
     }
