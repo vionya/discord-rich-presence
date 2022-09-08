@@ -20,7 +20,8 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
     pub client_id: String,
-    connected: bool,
+    /// Indicates whether the client is currently connected.
+    pub connected: bool,
     socket: Option<UnixStream>,
 }
 
@@ -102,10 +103,16 @@ impl DiscordIpc for DiscordIpcClient {
             Err(_err) => (),
         };
 
+        self.connected = false;
+
         Ok(())
     }
 
     fn get_client_id(&self) -> &String {
         &self.client_id
+    }
+
+    fn set_connected(&mut self, connected: bool) {
+        self.connected = connected;
     }
 }
