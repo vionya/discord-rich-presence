@@ -31,7 +31,6 @@ pub trait DiscordIpc {
     fn connect(&mut self) -> Result<()> {
         self.connect_ipc()?;
         self.send_handshake()?;
-        self.set_connected(true);
 
         Ok(())
     }
@@ -59,16 +58,12 @@ pub trait DiscordIpc {
         self.close()?;
         self.connect_ipc()?;
         self.send_handshake()?;
-        self.set_connected(true);
 
         Ok(())
     }
 
     #[doc(hidden)]
     fn get_client_id(&self) -> &String;
-
-    #[doc(hidden)]
-    fn set_connected(&mut self, connected: bool);
 
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
