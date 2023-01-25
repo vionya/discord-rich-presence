@@ -38,12 +38,9 @@ impl DiscordIpc for DiscordIpcClient {
         for i in 0..10 {
             let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{}", i));
 
-            match OpenOptions::new().access_mode(0x3).open(&path) {
-                Ok(handle) => {
-                    self.socket = Some(handle);
-                    return Ok(());
-                }
-                Err(_) => continue,
+            if let Ok(socket) = OpenOptions::new().access_mode(0x3).open(path) {
+                self.socket = Some(handle);
+                return Ok(());
             }
         }
 
