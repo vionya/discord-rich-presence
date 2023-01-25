@@ -4,7 +4,7 @@ use std::error::Error;
 #[test]
 fn test_models() -> Result<(), Box<dyn Error>> {
     let mut client = DiscordIpcClient::new("771124766517755954");
-    client.connect()?;
+    client.connect(None)?;
 
     let activity = activity::Activity::new()
         .state("A test")

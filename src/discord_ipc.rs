@@ -28,8 +28,8 @@ pub trait DiscordIpc {
     /// let mut client = discord_rich_presence::new_client("<some client id>")?;
     /// client.connect()?;
     /// ```
-    fn connect(&mut self) -> Result<()> {
-        self.connect_ipc()?;
+    fn connect(&mut self, ipc: Option<u8>) -> Result<()> {
+        self.connect_ipc(ipc)?;
         self.send_handshake()
     }
 
@@ -52,9 +52,9 @@ pub trait DiscordIpc {
     /// client.close()?;
     /// client.reconnect()?;
     /// ```
-    fn reconnect(&mut self) -> Result<()> {
+    fn reconnect(&mut self, ipc: Option<u8>) -> Result<()> {
         self.close()?;
-        self.connect_ipc()?;
+        self.connect_ipc(ipc)?;
         self.send_handshake()
     }
 
@@ -62,7 +62,7 @@ pub trait DiscordIpc {
     fn get_client_id(&self) -> &String;
 
     #[doc(hidden)]
-    fn connect_ipc(&mut self) -> Result<()>;
+    fn connect_ipc(&mut self, ipc: Option<u8>) -> Result<()>;
 
     /// Handshakes the Discord IPC.
     ///

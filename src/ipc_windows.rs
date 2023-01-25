@@ -37,16 +37,24 @@ impl DiscordIpcClient {
 }
 
 impl DiscordIpc for DiscordIpcClient {
-    fn connect_ipc(&mut self) -> Result<()> {
+    fn connect_ipc(&mut self, ipc: Option<u8>) -> Result<()> {
+        if let Some(ipc) = ipc {
+            let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{ipc}"));
+
+            let Ok(socket) = OpenOptions::new().access_mode(0x3).open(&path) else {
+                return Err("Selected socket not found".into())
+            };
+
+            self.socket = Some(socket);
+            return Ok(());
+        }
+
         for i in 0..10 {
             let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{}", i));
 
-            match OpenOptions::new().access_mode(0x3).open(&path) {
-                Ok(handle) => {
-                    self.socket = Some(handle);
-                    return Ok(());
-                }
-                Err(_) => continue,
+            if let Ok(socket) = OpenOptions::new().access_mode(0x3).open(&path) {
+                self.socket = Some(socket);
+                return Ok(());
             }
         }
 
