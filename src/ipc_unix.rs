@@ -57,7 +57,7 @@ impl DiscordIpc for DiscordIpcClient {
         for i in 0..10 {
             let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
-            if let Ok(socket) = UnixStream::connect(&path) {
+            if let Ok(socket) = UnixStream::connect(path) {
                 self.socket = Some(socket);
                 return Ok(());
             }
