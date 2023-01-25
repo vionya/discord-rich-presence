@@ -62,7 +62,9 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().expect("Client not connected");
+        let Some(socket) = &mut self.socket else {
+            return Err("Client not connected".into());
+        };
 
         socket.write_all(data)?;
 
@@ -70,7 +72,9 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
-        let socket = self.socket.as_mut().unwrap();
+        let Some(socket) = &mut self.socket else {
+            return Err("Client not connected".into());
+        };
 
         socket.read_exact(buffer)?;
 
@@ -78,10 +82,9 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn close(&mut self) -> Result<()> {
-        let data = json!({});
-        if self.send(data, 2).is_ok() {}
-
-        let socket = self.socket.as_mut().unwrap();
+        let Some(socket) = &mut self.socket else {
+            return Err("Client not connected".into());
+        };
         socket.flush()?;
 
         Ok(())
