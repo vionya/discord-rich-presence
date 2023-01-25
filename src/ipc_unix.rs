@@ -50,20 +50,9 @@ impl DiscordIpcClient {
 }
 
 impl DiscordIpc for DiscordIpcClient {
-    fn connect_ipc(&mut self, ipc: Option<u8>) -> Result<()> {
-        if let Some(ipc) = ipc {
-            let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{ipc}"));
-
-            let Ok(socket) = UnixStream::connect(path) else {
-                return Err("Selected socket doesnt exist".into());
-            };
-
-            self.socket = Some(socket);
-            return Ok(());
-        }
-
+    fn connect_ipc(&mut self) -> Result<()> {
         for i in 0..10 {
-            let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{i}"));
+            let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
             if let Ok(socket) = UnixStream::connect(path) {
                 self.socket = Some(socket);
