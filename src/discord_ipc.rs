@@ -30,9 +30,7 @@ pub trait DiscordIpc {
     /// ```
     fn connect(&mut self) -> Result<()> {
         self.connect_ipc()?;
-        self.send_handshake()?;
-
-        Ok(())
+        self.send_handshake()
     }
 
     /// Reconnects to the Discord IPC.
@@ -57,9 +55,7 @@ pub trait DiscordIpc {
     fn reconnect(&mut self) -> Result<()> {
         self.close()?;
         self.connect_ipc()?;
-        self.send_handshake()?;
-
-        Ok(())
+        self.send_handshake()
     }
 
     #[doc(hidden)]
@@ -109,7 +105,7 @@ pub trait DiscordIpc {
     /// ```
     fn send(&mut self, data: Value, opcode: u8) -> Result<()> {
         let data_string = data.to_string();
-        let header = pack(opcode.into(), data_string.len() as u32)?;
+        let header = pack(opcode.into(), data_string.len() as u32);
 
         self.write(&header)?;
         self.write(data_string.as_bytes())?;
@@ -179,9 +175,9 @@ pub trait DiscordIpc {
     }
 
     /// Works the same as as [`set_activity`] but clears activity instead.
-    /// 
+    ///
     /// [`set_activity`]: #method.set_activity
-    /// 
+    ///
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn clear_activity(&mut self) -> Result<()> {
@@ -193,7 +189,7 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        
+
         self.send(data, 1)?;
 
         Ok(())

@@ -27,8 +27,8 @@ impl DiscordIpcClient {
     /// ```
     /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
     /// ```
-    pub fn new(client_id: &str) {
-        let client = Self {
+    pub fn new(client_id: &str) -> Self {
+        Self {
             client_id: client_id.to_string(),
             connected: false,
             socket: None,
