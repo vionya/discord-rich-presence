@@ -11,7 +11,7 @@
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let mut client = DiscordIpcClient::new("<some client id>")?;
-//!     client.connect(None)?;
+//!     client.connect()?;
 //!
 //!     let payload = activity::Activity::new().state("Hello world!");
 //!     client.set_activity(payload)?;
