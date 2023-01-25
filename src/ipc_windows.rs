@@ -29,7 +29,7 @@ impl DiscordIpcClient {
         Self {
             client_id: client_id.to_string(),
             socket: None,
-        };
+        }
     }
 }
 
