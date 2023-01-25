@@ -43,14 +43,11 @@ impl DiscordIpcClient {
         let mut path = String::new();
 
         for key in &ENV_KEYS {
-            match var(key) {
-                Ok(val) => {
-                    path = val;
-                    break;
-                }
-                Err(_e) => continue,
+            if let Ok(val) = var(key) {
+                path = val
             }
         }
+
         PathBuf::from(path)
     }
 }
@@ -60,12 +57,9 @@ impl DiscordIpc for DiscordIpcClient {
         for i in 0..10 {
             let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
-            match UnixStream::connect(&path) {
-                Ok(socket) => {
-                    self.socket = Some(socket);
-                    return Ok(());
-                }
-                Err(_) => continue,
+            if let Ok(socket) = UnixStream::connect(&path) {
+                self.socket = Some(socket);
+                return Ok(());
             }
         }
 
@@ -73,7 +67,9 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().expect("Client not connected");
+        let Some(socket) = &mut self.socket else {
+            return Err("Not connected to socket".into());
+        };
 
         socket.write_all(data)?;
 
@@ -81,7 +77,9 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
-        let socket = self.socket.as_mut().unwrap();
+        let Some(socket) = &mut self.socket else {
+            return Err("Not connected to socket".into());
+        };
 
         socket.read_exact(buffer)?;
 
