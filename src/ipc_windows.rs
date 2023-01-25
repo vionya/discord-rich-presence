@@ -10,13 +10,11 @@ use std::{
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-#[allow(dead_code)]
 /// A wrapper struct for the functionality contained in the
 /// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
 pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
     pub client_id: String,
-    connected: bool,
     socket: Option<File>,
 }
 
@@ -30,7 +28,6 @@ impl DiscordIpcClient {
     pub fn new(client_id: &str) -> Self {
         Self {
             client_id: client_id.to_string(),
-            connected: false,
             socket: None,
         };
     }
