@@ -6,21 +6,39 @@ fn test_models() -> Result<(), Box<dyn Error>> {
     let mut client = DiscordIpcClient::new("771124766517755954")?;
     client.connect()?;
 
-    let activity = activity::Activity::new()
-        .state("A test")
-        .details("A placeholder")
+    let mut activity = activity::ActivityBuilder::default()
+        .state("State")
+        .details("Details")
         .assets(
-            activity::Assets::new()
+            activity::AssetsBuilder::default()
                 .large_image("large-image")
-                .large_text("Large text"),
+                .large_text("Large text")
+                .build(),
         )
-        .buttons(vec![activity::Button::new(
-            "A button",
-            "https://github.com",
-        )]);
-    client.set_activity(activity)?;
+        // .buttons(vec![activity::Button::new(
+        //     "A button",
+        //     "https://example.com",
+        // )])
+        .timestamps(activity::models::Timestamps::new(Some(1), None))
+        .secrets(
+            activity::SecretsBuilder::default()
+                .join_secret("abc")
+                .build(),
+        )
+        .build();
 
-    std::thread::sleep(std::time::Duration::from_secs(10));
+    activity.set_party(
+        activity::PartyBuilder::default()
+            .id("some-id")
+            .size([1, 3])
+            .build(),
+    );
+
+    client.set_activity(activity)?;
+    println!("{:?}", client.recv());
+
+    std::thread::park();
+    // std::thread::sleep(std::time::Duration::from_secs(10));
 
     client.close()?;
     Ok(())

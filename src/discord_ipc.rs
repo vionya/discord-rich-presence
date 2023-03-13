@@ -1,5 +1,5 @@
 use crate::{
-    activity::Activity,
+    activity::models::Activity,
     pack_unpack::{pack, unpack},
 };
 use serde_json::{json, Value};

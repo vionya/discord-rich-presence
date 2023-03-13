@@ -7,26 +7,30 @@ fn test_updating() -> Result<(), Box<dyn Error>> {
     client.connect()?;
 
     client.set_activity(
-        activity::Activity::new()
+        activity::ActivityBuilder::default()
             .state("part 1 (test)")
             .details("a placeholder")
             .assets(
-                activity::Assets::new()
+                activity::AssetsBuilder::default()
                     .large_image("large-image")
-                    .large_text("a thing"),
-            ),
+                    .large_text("a thing")
+                    .build(),
+            )
+            .build(),
     )?;
     std::thread::sleep(std::time::Duration::from_secs(2));
 
     client.set_activity(
-        activity::Activity::new()
+        activity::ActivityBuilder::default()
             .state("part 2 (test)")
             .details("a placeholder")
             .assets(
-                activity::Assets::new()
+                activity::AssetsBuilder::default()
                     .large_image("small-image")
-                    .large_text("a thing"),
-            ),
+                    .large_text("a thing")
+                    .build(),
+            )
+            .build(),
     )?;
     std::thread::sleep(std::time::Duration::from_secs(2));
 
