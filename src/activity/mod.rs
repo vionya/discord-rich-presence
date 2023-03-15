@@ -15,13 +15,17 @@
 //!         .small_image("small-image")
 //!         .build()
 //!     )
+//!     .timestamps(activity::Timestamps::new(0, None))
 //!     .build();
 //! 
 //! client.set_activity(activity)?;
 //! ```
 //! 
-//! Some structs in the [`models`] also provide shorthand `new()` functions to construct
-//! them more concisely, such as [`models::Timestamps`].
+//! Some structs in [`models`] also provide shorthand `new()` methods to construct
+//! them more concisely, such as [`Timestamps`].
+//! 
+//! This module re-exports both [`models`] and [`builders`]. The primary way to create
+//! models is via the structs in [`builders`].
 pub mod builders;
 pub mod models;
 

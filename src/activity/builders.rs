@@ -1,7 +1,13 @@
-//! TODO
+//! Provides builders for constructing Discord models.
+//! 
+//! The primary builder is [`ActivityBuilder`], which is the top-level builder.
+//! Models attached to the relevant [`Activity`] all have their own builders as well.
+//! 
+//! Note that some models (like [`Timestamps`]) have shorthand `new()` methods which
+//! allow extra boilerplate to be avoided.
 use crate::activity::models::{Activity, Assets, Button, Party, Secrets, Timestamps};
 
-/// A struct for building `Activity` models
+/// A struct for building [`Activity`] models
 #[derive(Default)]
 pub struct ActivityBuilder {
     state: Option<String>,
@@ -13,21 +19,21 @@ pub struct ActivityBuilder {
     buttons: Option<Vec<Button>>,
 }
 
-/// A struct for building an `Activity`'s timestamps
+/// A struct for building an [`Activity`]'s timestamps
 #[derive(Default)]
 pub struct TimestampsBuilder {
     start: Option<i64>,
     end: Option<i64>,
 }
 
-/// A struct for building an `Activity`'s game party
+/// A struct for building an [`Activity`]'s game party
 #[derive(Default)]
 pub struct PartyBuilder {
     id: Option<String>,
     size: Option<[i32; 2]>,
 }
 
-/// A struct for building the art assets and hover text used by an `Activity`
+/// A struct for building the art assets and hover text used by an [`Activity`]
 #[derive(Default)]
 pub struct AssetsBuilder {
     large_image: Option<String>,
@@ -36,7 +42,7 @@ pub struct AssetsBuilder {
     small_text: Option<String>,
 }
 
-/// A struct for building the secrets used by an `Activity`
+/// A struct for building the secrets used by an [`Activity`]
 #[derive(Default)]
 pub struct SecretsBuilder {
     join_secret: Option<String>,
@@ -57,35 +63,35 @@ impl ActivityBuilder {
         self
     }
 
-    /// Add a `Timestamps` to this activity
+    /// Add a [`Timestamps`] to this activity
     pub fn timestamps(mut self, timestamps: Timestamps) -> Self {
         self.timestamps = Some(timestamps);
         self
     }
 
-    /// Add a `Party` to this activity
+    /// Add a [`Party`] to this activity
     pub fn party(mut self, party: Party) -> Self {
         self.party = Some(party);
         self
     }
 
-    /// Add an `Assets` to this activity
+    /// Add an [`Assets`] to this activity
     pub fn assets(mut self, assets: Assets) -> Self {
         self.assets = Some(assets);
         self
     }
 
-    /// Add a `Secrets` to this activity
+    /// Add a [`Secrets`] to this activity
     pub fn secrets(mut self, secrets: Secrets) -> Self {
         self.secrets = Some(secrets);
         self
     }
 
-    /// Add a `Vec` of `Button`s to this activity
+    /// Add a [`Vec`] of [`Button`]s to this activity
     ///
     /// An activity may contain no more than 2 buttons
     ///
-    /// Passing an empty `Vec` will clear the activity's buttons
+    /// Passing an empty [`Vec`] will clear the activity's buttons
     pub fn buttons(mut self, buttons: Vec<Button>) -> Self {
         // API call fails if the array is empty, so we skip serialization
         // entirely if this is the case
@@ -97,7 +103,7 @@ impl ActivityBuilder {
         self
     }
 
-    /// Builds the `Activity` model
+    /// Builds the [`Activity`] model
     pub fn build(self) -> Activity {
         Activity {
             state: self.state,
