@@ -4,7 +4,7 @@ use std::os::unix::net::UnixStream;
 use std::{
     env::var,
     error::Error,
-    io::{Read, Write},
+    io::{self, Read, Write},
     net::Shutdown,
     path::PathBuf,
 };
@@ -72,29 +72,23 @@ impl DiscordIpc for DiscordIpcClient {
         Err("Couldn't connect to the Discord IPC socket".into())
     }
 
-    fn write(&mut self, data: &[u8]) -> Result<()> {
+    fn write(&mut self, data: &[u8]) -> io::Result<()> {
         let socket = self.socket.as_mut().expect("Client not connected");
-
-        socket.write_all(data)?;
-
-        Ok(())
+        socket.write_all(data)
     }
 
-    fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()> {
         let socket = self.socket.as_mut().unwrap();
-
-        socket.read_exact(buffer)?;
-
-        Ok(())
+        socket.read_exact(buffer)
     }
 
-    fn close(&mut self) -> Result<()> {
+    fn close(&mut self) -> io::Result<()> {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
         let socket = self.socket.as_mut().unwrap();
-
         socket.flush()?;
+        // Shutdown, but we don't care about if it's successful or not
         match socket.shutdown(Shutdown::Both) {
             Ok(()) => (),
             Err(_err) => (),
