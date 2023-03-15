@@ -3,7 +3,7 @@ use serde_json::json;
 use std::{
     error::Error,
     fs::{File, OpenOptions},
-    io::{Read, Write},
+    io::{Read, Write, self},
     os::windows::fs::OpenOptionsExt,
     path::PathBuf,
 };
@@ -53,30 +53,24 @@ impl DiscordIpc for DiscordIpcClient {
         Err("Couldn't connect to the Discord IPC socket".into())
     }
 
-    fn write(&mut self, data: &[u8]) -> Result<()> {
+    fn write(&mut self, data: &[u8]) -> io::Result<()> {
         let socket = self.socket.as_mut().expect("Client not connected");
-
         socket.write_all(data)?;
 
         Ok(())
     }
 
-    fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()> {
         let socket = self.socket.as_mut().unwrap();
-
-        socket.read_exact(buffer)?;
-
-        Ok(())
+        socket.read_exact(buffer)
     }
 
-    fn close(&mut self) -> Result<()> {
+    fn close(&mut self) -> io::Result<()> {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
         let socket = self.socket.as_mut().unwrap();
-        socket.flush()?;
-
-        Ok(())
+        socket.flush()
     }
 
     fn get_client_id(&self) -> &String {
