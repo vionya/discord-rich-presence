@@ -88,10 +88,26 @@ pub trait DiscordIpc {
             }),
             0,
         )?;
-        // TODO: Return an Err if the handshake is rejected
-        self.recv()?;
+        let (opcode, data) = self.recv()?;
 
-        Ok(())
+        // Received a Close response
+        if opcode == 2 {
+            if let Some(code) = data.get("code") {
+                match code.as_u64() {
+                    Some(4000) => Err("Invalid client ID".into()),
+                    Some(4001) => Err("Invalid origin".into()),
+                    Some(4002) => Err("Rate limited".into()),
+                    Some(4003) => Err("Token revoked".into()),
+                    Some(4004) => Err("Invalid version".into()),
+                    Some(4005) => Err("Invalid encoding".into()),
+                    _ => Ok(()),
+                }
+            } else {
+                Err("Invalid response body".into())
+            }
+        } else {
+            Ok(())
+        }
     }
 
     /// Sends JSON data to the Discord IPC.
