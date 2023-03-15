@@ -178,7 +178,7 @@ pub trait DiscordIpc {
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {
-                // "pid": std::process::id(),
+                "pid": std::process::id(),
                 "activity": activity_payload
             },
             "nonce": Uuid::new_v4().to_string()

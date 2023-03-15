@@ -43,6 +43,7 @@ impl DiscordIpcClient {
         let mut path = String::new();
 
         for key in &ENV_KEYS {
+            // TODO: Refactor to if let
             match var(key) {
                 Ok(val) => {
                     path = val;
@@ -60,12 +61,9 @@ impl DiscordIpc for DiscordIpcClient {
         for i in 0..10 {
             let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
-            match UnixStream::connect(&path) {
-                Ok(socket) => {
-                    self.socket = Some(socket);
-                    return Ok(());
-                }
-                Err(_) => continue,
+            if let Ok(socket) = UnixStream::connect(&path) {
+                self.socket = Some(socket);
+                return Ok(());
             }
         }
 
