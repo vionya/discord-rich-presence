@@ -13,7 +13,7 @@
 //!     let mut client = DiscordIpcClient::new("<some client id>");
 //!     client.connect()?;
 //!
-//!     let payload = activity::Activity::new().state("Hello world!");
+//!     let payload = activity::ActivityBuilder::default().state("Hello world!").build();
 //!     client.set_activity(payload)?;
 //! }
 //! ```

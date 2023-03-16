@@ -42,7 +42,7 @@ pub trait DiscordIpc {
     ///
     /// # Examples
     /// ```
-    /// let mut client = discord_rich_presence::new_client("<some client id>")?;
+    /// let mut client = DiscordIpcClient::new("<some client id>");
     /// client.connect()?;
     /// ```
     fn connect(&mut self) -> Result<Value> {
@@ -63,7 +63,7 @@ pub trait DiscordIpc {
     ///
     /// # Examples
     /// ```
-    /// let mut client = discord_rich_presence::new_client("<some client id>")?;
+    /// let mut client = DiscordIpcClient::new("<some client id>");
     /// client.connect()?;
     ///
     /// client.close()?;
@@ -87,6 +87,7 @@ pub trait DiscordIpc {
     /// # Errors
     ///
     /// Returns an `Err` variant if sending the handshake failed.
+    #[doc(hidden)]
     fn send_handshake(&mut self) -> Result<Value> {
         self.send(
             json!({
