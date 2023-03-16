@@ -15,10 +15,10 @@ fn test_models() -> Result<(), Box<dyn Error>> {
                 .large_text("Large text")
                 .build(),
         )
-        // .buttons(vec![activity::Button::new(
-        //     "A button",
-        //     "https://example.com",
-        // )])
+        .buttons(vec![activity::Button::new(
+            "A button",
+            "https://example.com",
+        )])
         .timestamps(activity::models::Timestamps::new(Some(1), None))
         .secrets(
             activity::SecretsBuilder::default()
@@ -34,8 +34,7 @@ fn test_models() -> Result<(), Box<dyn Error>> {
             .build(),
     );
 
-    client.set_activity(activity)?;
-    println!("{:?}", client.recv());
+    println!("{:#?}", client.set_activity(activity)?);
 
     std::thread::park();
     // std::thread::sleep(std::time::Duration::from_secs(10));

@@ -1,4 +1,4 @@
-use crate::discord_ipc::DiscordIpc;
+use crate::{discord_ipc::DiscordIpc, Opcode};
 use serde_json::json;
 use std::{
     error::Error,
@@ -37,6 +37,10 @@ impl DiscordIpcClient {
 }
 
 impl DiscordIpc for DiscordIpcClient {
+    fn get_client_id(&self) -> &String {
+        &self.client_id
+    }
+
     fn connect_ipc(&mut self) -> Result<()> {
         for i in 0..10 {
             let path = PathBuf::from(format!(r"\\?\pipe\discord-ipc-{}", i));
@@ -50,27 +54,21 @@ impl DiscordIpc for DiscordIpcClient {
         Err("Couldn't connect to the Discord IPC socket".into())
     }
 
-    fn write(&mut self, data: &[u8]) -> io::Result<()> {
-        let socket = self.socket.as_mut().expect("Client not connected");
-        socket.write_all(data)?;
-
-        Ok(())
-    }
-
-    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()> {
-        let socket = self.socket.as_mut().unwrap();
-        socket.read_exact(buffer)
-    }
-
     fn close(&mut self) -> io::Result<()> {
         let data = json!({});
-        if self.send(data, 2).is_ok() {}
+        if self.send(data, Opcode::Close).is_ok() {}
 
         let socket = self.socket.as_mut().unwrap();
         socket.flush()
     }
 
-    fn get_client_id(&self) -> &String {
-        &self.client_id
+    fn write(&mut self, data: &[u8]) -> io::Result<()> {
+        let socket = self.socket.as_mut().expect("Client not connected");
+        socket.write_all(data)
+    }
+
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()> {
+        let socket = self.socket.as_mut().unwrap();
+        socket.read_exact(buffer)
     }
 }

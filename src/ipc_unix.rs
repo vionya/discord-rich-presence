@@ -1,4 +1,4 @@
-use crate::discord_ipc::DiscordIpc;
+use crate::{discord_ipc::DiscordIpc, Opcode};
 use serde_json::json;
 use std::os::unix::net::UnixStream;
 use std::{
@@ -82,7 +82,7 @@ impl DiscordIpc for DiscordIpcClient {
 
     fn close(&mut self) -> io::Result<()> {
         let data = json!({});
-        if self.send(data, 2).is_ok() {}
+        if self.send(data, Opcode::Close).is_ok() {}
 
         let socket = self.socket.as_mut().unwrap();
         socket.flush()?;

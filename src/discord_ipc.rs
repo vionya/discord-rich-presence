@@ -1,6 +1,8 @@
 use crate::{
     activity::models::Activity,
-    pack_unpack::{pack, unpack},
+    error::DiscordError,
+    util::{pack, unpack},
+    Opcode,
 };
 use serde_json::{json, Value};
 use std::{error::Error, io};
@@ -12,6 +14,21 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 ///
 /// Implemented via the [`DiscordIpcClient`](struct@crate::DiscordIpcClient) struct.
 pub trait DiscordIpc {
+    #[doc(hidden)]
+    fn get_client_id(&self) -> &String;
+
+    #[doc(hidden)]
+    fn connect_ipc(&mut self) -> Result<()>;
+
+    /// Closes the Discord IPC connection. Implementation is dependent on platform.
+    fn close(&mut self) -> io::Result<()>;
+
+    #[doc(hidden)]
+    fn write(&mut self, data: &[u8]) -> io::Result<()>;
+
+    #[doc(hidden)]
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()>;
+
     /// Connects the client to the Discord IPC.
     ///
     /// This method attempts to first establish a connection,
@@ -28,7 +45,7 @@ pub trait DiscordIpc {
     /// let mut client = discord_rich_presence::new_client("<some client id>")?;
     /// client.connect()?;
     /// ```
-    fn connect(&mut self) -> Result<()> {
+    fn connect(&mut self) -> Result<Value> {
         self.connect_ipc()?;
         self.send_handshake()
     }
@@ -52,17 +69,11 @@ pub trait DiscordIpc {
     /// client.close()?;
     /// client.reconnect()?;
     /// ```
-    fn reconnect(&mut self) -> Result<()> {
+    fn reconnect(&mut self) -> Result<Value> {
         self.close()?;
         self.connect_ipc()?;
         self.send_handshake()
     }
-
-    #[doc(hidden)]
-    fn get_client_id(&self) -> &String;
-
-    #[doc(hidden)]
-    fn connect_ipc(&mut self) -> Result<()>;
 
     /// Handshakes the Discord IPC.
     ///
@@ -76,40 +87,20 @@ pub trait DiscordIpc {
     /// # Errors
     ///
     /// Returns an `Err` variant if sending the handshake failed.
-    fn send_handshake(&mut self) -> Result<()> {
+    fn send_handshake(&mut self) -> Result<Value> {
         self.send(
             json!({
                 "v": 1,
                 "client_id": self.get_client_id()
             }),
-            0,
-        )?;
-        let (opcode, data) = self.recv()?;
-
-        // Received a Close response
-        if opcode == 2 {
-            if let Some(code) = data.get("code") {
-                match code.as_u64() {
-                    Some(4000) => Err("Invalid client ID".into()),
-                    Some(4001) => Err("Invalid origin".into()),
-                    Some(4002) => Err("Rate limited".into()),
-                    Some(4003) => Err("Token revoked".into()),
-                    Some(4004) => Err("Invalid version".into()),
-                    Some(4005) => Err("Invalid encoding".into()),
-                    _ => Ok(()),
-                }
-            } else {
-                Err("Invalid response body".into())
-            }
-        } else {
-            Ok(())
-        }
+            Opcode::Handshake,
+        )
     }
 
     /// Sends JSON data to the Discord IPC.
     ///
-    /// This method takes data (`serde_json::Value`) and
-    /// an opcode as its parameters.
+    /// This method takes [data](`serde_json::Value`) and
+    /// an [opcode](`Opcode`) as its parameters.
     ///
     /// # Errors
     /// Returns an `Err` variant if writing to the socket failed
@@ -117,18 +108,17 @@ pub trait DiscordIpc {
     /// # Examples
     /// ```
     /// let payload = serde_json::json!({ "field": "value" });
-    /// client.send(payload, 0)?;
+    /// client.send(payload, Opcode::Handshake)?;
     /// ```
-    fn send(&mut self, data: Value, opcode: u8) -> io::Result<()> {
+    fn send(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
         let data_string = data.to_string();
         let header = pack(opcode.into(), data_string.len() as u32);
 
         self.write(&header)?;
-        self.write(data_string.as_bytes())
-    }
+        self.write(data_string.as_bytes())?;
 
-    #[doc(hidden)]
-    fn write(&mut self, data: &[u8]) -> io::Result<()>;
+        self.recv()
+    }
 
     /// Receives an opcode and JSON data from the Discord IPC.
     ///
@@ -136,8 +126,7 @@ pub trait DiscordIpc {
     /// It returns a tuple containing the opcode, and the JSON data.
     ///
     /// # Errors
-    /// Returns an `Err` variant if reading the socket was
-    /// unsuccessful.
+    /// Returns an `Err` variant if reading the socket was unsuccessful.
     ///
     /// # Examples
     /// ```
@@ -146,11 +135,13 @@ pub trait DiscordIpc {
     ///
     /// println!("{:?}", client.recv()?);
     /// ```
-    fn recv(&mut self) -> Result<(u32, Value)> {
+    #[doc(hidden)]
+    fn recv(&mut self) -> Result<Value> {
         let mut header = [0; 8];
 
         self.read(&mut header)?;
         let (op, length) = unpack(header.to_vec())?;
+        let opcode = Opcode::from(op);
 
         let mut data = vec![0u8; length as usize];
         self.read(&mut data)?;
@@ -158,23 +149,46 @@ pub trait DiscordIpc {
         let response = String::from_utf8(data.to_vec())?;
         let json_data = serde_json::from_str::<Value>(&response)?;
 
-        Ok((op, json_data))
+        // ERROR HANDLING
+        let evt = &json_data["evt"];
+        // If the opcode is Close, then the response body is different from a standard
+        // payload, so it needs to be handled separately
+        if opcode == Opcode::Close {
+            // For a Close response, the data is at the top level
+            let (code, msg) = (&json_data["code"], &json_data["message"]);
+            if code.is_u64() && msg.is_string() {
+                return Err(DiscordError {
+                    code: code.as_u64().unwrap(),
+                    message: msg.as_str().unwrap().to_string(),
+                }
+                .into());
+            }
+        // If the "evt" key is "ERROR", then there's an error to return
+        } else if evt.is_string() && evt.as_str().unwrap() == "ERROR" {
+            // For any other response opcode, the data is nested, since the response is
+            // the sent command echoed
+            let (code, msg) = (&json_data["data"]["code"], &json_data["data"]["message"]);
+            if code.is_u64() && msg.is_string() {
+                return Err(DiscordError {
+                    code: code.as_u64().unwrap(),
+                    message: msg.as_str().unwrap().to_string(),
+                }
+                .into());
+            }
+        };
+        Ok(json_data)
     }
-
-    #[doc(hidden)]
-    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()>;
 
     /// Sets a Discord activity.
     ///
-    /// This method is an abstraction of [`send`],
-    /// wrapping it such that only an activity payload
-    /// is required.
+    /// This method is an abstraction of [`send`], wrapping it such that only an
+    /// activity payload is required.
     ///
     /// [`send`]: #method.send
     ///
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
-    fn set_activity(&mut self, activity_payload: Activity) -> io::Result<()> {
+    fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {
@@ -183,7 +197,7 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        self.send(data, 1)
+        self.send(data, Opcode::Frame)
     }
 
     /// Works the same as as [`set_activity`] but clears activity instead.
@@ -192,7 +206,7 @@ pub trait DiscordIpc {
     ///
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
-    fn clear_activity(&mut self) -> io::Result<()> {
+    fn clear_activity(&mut self) -> Result<Value> {
         let data = json!({
             "cmd": "SET_ACTIVITY",
             "args": {
@@ -201,9 +215,6 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        self.send(data, 1)
+        self.send(data, Opcode::Frame)
     }
-
-    /// Closes the Discord IPC connection. Implementation is dependent on platform.
-    fn close(&mut self) -> io::Result<()>;
 }
