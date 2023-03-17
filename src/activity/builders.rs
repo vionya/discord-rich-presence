@@ -1,8 +1,8 @@
 //! Provides builders for constructing Discord models.
-//! 
+//!
 //! The primary builder is [`ActivityBuilder`], which is the top-level builder.
 //! Models attached to the relevant [`Activity`] all have their own builders as well.
-//! 
+//!
 //! Note that some models (like [`Timestamps`]) have shorthand `new()` methods which
 //! allow extra boilerplate to be avoided.
 use crate::activity::models::{Activity, Assets, Button, Party, Secrets, Timestamps};
@@ -156,7 +156,8 @@ impl PartyBuilder {
     /// ```
     /// // Creates a party with a current size
     /// // of 1, and a max size of 3
-    /// let party = PartyBuilder::new().size([1, 3]).build();
+    /// # use discord_rich_presence::activity::PartyBuilder;
+    /// let party = PartyBuilder::default().size([1, 3]).build();
     /// ```
     pub fn size(mut self, size: [i32; 2]) -> Self {
         self.size = Some(size);

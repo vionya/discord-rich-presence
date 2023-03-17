@@ -17,13 +17,18 @@
 //!     client.set_activity(payload)?;
 //! }
 //! ```
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 
 mod discord_ipc;
 pub mod error;
 mod util;
 pub use discord_ipc::*;
 pub mod activity;
+
+/// [`serde_json::json`] is re-exported for convenience, since a few functions
+/// take a [`Value`](serde_json::value) as an argument.
+///
+pub use serde_json::json;
 
 #[cfg(unix)]
 mod ipc_unix;

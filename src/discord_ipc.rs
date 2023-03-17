@@ -1,7 +1,8 @@
 use crate::{
-    activity::models::Activity,
+    activity::Activity,
+    cmd,
     error::DiscordError,
-    util::{pack, unpack},
+    util::{jsonify_array, pack, unpack},
     Opcode,
 };
 use serde_json::{json, Value};
@@ -180,6 +181,8 @@ pub trait DiscordIpc {
         Ok(json_data)
     }
 
+    // ABSTRACTIONS
+
     /// Sets a Discord activity.
     ///
     /// This method is an abstraction of [`send`], wrapping it such that only an
@@ -190,15 +193,16 @@ pub trait DiscordIpc {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
-        let data = json!({
-            "cmd": "SET_ACTIVITY",
-            "args": {
-                "pid": std::process::id(),
-                "activity": activity_payload
-            },
-            "nonce": Uuid::new_v4().to_string()
-        });
-        self.send(data, Opcode::Frame)
+        self.send(
+            cmd!(
+                SET_ACTIVITY,
+                {
+                    "pid": std::process::id(),
+                    "activity": activity_payload
+                }
+            ),
+            Opcode::Frame,
+        )
     }
 
     /// Works the same as as [`set_activity`] but clears activity instead.
@@ -208,14 +212,15 @@ pub trait DiscordIpc {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn clear_activity(&mut self) -> Result<Value> {
-        let data = json!({
-            "cmd": "SET_ACTIVITY",
-            "args": {
-                "pid": std::process::id(),
-                "activity": None::<()>
-            },
-            "nonce": Uuid::new_v4().to_string()
-        });
-        self.send(data, Opcode::Frame)
+        self.send(
+            cmd!(
+                SET_ACTIVITY,
+                {
+                    "pid": std::process::id(),
+                    "activity": None::<()>
+                }
+            ),
+            Opcode::Frame,
+        )
     }
 }
