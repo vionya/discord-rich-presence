@@ -21,7 +21,7 @@ pub trait DiscordIpc {
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
 
-    /// Closes the Discord IPC connection. Implementation is dependent on platform.
+    #[doc(hidden)]
     fn close(&mut self) -> io::Result<()>;
 
     #[doc(hidden)]
@@ -71,9 +71,16 @@ pub trait DiscordIpc {
     /// client.reconnect()?;
     /// ```
     fn reconnect(&mut self) -> Result<Value> {
-        self.close()?;
+        self.disconnect()?;
         self.connect_ipc()?;
         self.send_handshake()
+    }
+
+    /// Disconnects from the Discord IPC. Implementation is dependent on platform.
+    fn disconnect(&mut self) -> io::Result<()> {
+        // Delegate to trait platform-specific implementation
+        self.close()
+        // TODO: set connected to false
     }
 
     /// Handshakes the Discord IPC.

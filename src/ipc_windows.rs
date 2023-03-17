@@ -55,9 +55,7 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn close(&mut self) -> io::Result<()> {
-        let data = json!({});
-        if self.send(data, Opcode::Close).is_ok() {}
-
+        _ = self.send(json!({}), Opcode::Close);
         let socket = self.socket.as_mut().unwrap();
         socket.flush()
     }

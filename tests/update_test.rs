@@ -34,6 +34,6 @@ fn test_updating() -> Result<(), Box<dyn Error>> {
     )?;
     std::thread::sleep(std::time::Duration::from_secs(2));
 
-    client.close()?;
+    client.disconnect()?;
     Ok(())
 }
