@@ -10,10 +10,8 @@ use std::{error::Error, io};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-#[allow(dead_code)]
 pub struct DiscordIpcClient {
     client_id: String,
-    connected: bool,
     ipc: GenericIpcImpl,
 }
 
@@ -24,7 +22,6 @@ impl DiscordIpcClient {
     pub fn new(client_id: impl ToString) -> Self {
         Self {
             client_id: client_id.to_string(),
-            connected: true,
             ipc: GenericIpcImpl {
                 connection: PlatformIpcImpl::default(),
             },
@@ -105,24 +102,31 @@ impl DiscordIpcClient {
     /// Returns an `Err` variant if sending the handshake failed.
     #[doc(hidden)]
     fn send_handshake(&mut self) -> Result<Value> {
-        self.ipc
-            .send(
-                json!({
-                    "v": 1,
-                    "client_id": self.get_client_id()
-                }),
-                Opcode::Handshake,
-            )
-            .map(|(val, _)| val)
-    }
-
-        self.send(
+        self.send_mapped(
             json!({
                 "v": 1,
                 "client_id": self.get_client_id()
             }),
             Opcode::Handshake,
         )
+    }
+
+    /// Determines if the client is currently connected to the Discord IPC.
+    ///
+    /// PINGs the IPC and returns whether or not the response used the PONG
+    /// opcode.
+    pub fn connected(&mut self) -> bool {
+        if let Ok((_, op)) = self.ipc.send(
+            json!(
+                {"v": 1,
+                "client_id": self.get_client_id()}
+            ),
+            Opcode::Ping,
+        ) {
+            return op == Opcode::Pong;
+        }
+        false
+    }
 
     // ABSTRACTIONS
 
@@ -131,18 +135,16 @@ impl DiscordIpcClient {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     pub fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
-        self.ipc
-            .send(
-                cmd!(
-                    SET_ACTIVITY,
-                    {
-                        "pid": std::process::id(),
-                        "activity": activity_payload
-                    }
-                ),
-                Opcode::Frame,
-            )
-            .map(|(val, _)| val)
+        self.send_mapped(
+            cmd!(
+                SET_ACTIVITY,
+                {
+                    "pid": std::process::id(),
+                    "activity": activity_payload
+                }
+            ),
+            Opcode::Frame,
+        )
     }
 
     /// Works the same as as [`set_activity`] but clears activity instead.
@@ -152,18 +154,27 @@ impl DiscordIpcClient {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     pub fn clear_activity(&mut self) -> Result<Value> {
-        self.ipc
-            .send(
-                cmd!(
-                    SET_ACTIVITY,
-                    {
-                        "pid": std::process::id(),
-                        "activity": None::<()>
-                    }
-                ),
-                Opcode::Frame,
-            )
-            .map(|(val, _)| val)
+        self.send_mapped(
+            cmd!(
+                SET_ACTIVITY,
+                {
+                    "pid": std::process::id(),
+                    "activity": None::<()>
+                }
+            ),
+            Opcode::Frame,
+        )
+    }
+
+    /// Private function, calls the underlying IPC impl's `send`
+    /// function and returns a mapped version of the result to
+    /// use in abstracted functions in this implementation.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if sending the data fails.
+    fn send_mapped(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
+        self.ipc.send(data, opcode).map(|(val, _)| val)
     }
 }
 
