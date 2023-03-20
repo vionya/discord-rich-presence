@@ -102,7 +102,7 @@ impl DiscordIpcClient {
     /// Returns an `Err` variant if sending the handshake failed.
     #[doc(hidden)]
     fn send_handshake(&mut self) -> Result<Value> {
-        self.send_mapped(
+        self.send(
             json!({
                 "v": 1,
                 "client_id": self.get_client_id()
@@ -135,7 +135,7 @@ impl DiscordIpcClient {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     pub fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
-        self.send_mapped(
+        self.send(
             cmd!(
                 SET_ACTIVITY,
                 {
@@ -154,7 +154,7 @@ impl DiscordIpcClient {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     pub fn clear_activity(&mut self) -> Result<Value> {
-        self.send_mapped(
+        self.send(
             cmd!(
                 SET_ACTIVITY,
                 {
@@ -173,7 +173,7 @@ impl DiscordIpcClient {
     /// # Errors
     ///
     /// This function will return an error if sending the data fails.
-    fn send_mapped(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
+    fn send(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
         self.connection.send(data, opcode).map(|(val, _)| val)
     }
 }
