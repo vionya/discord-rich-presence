@@ -12,177 +12,15 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 pub struct DiscordIpcClient {
     client_id: String,
-    connection: IpcConnection,
+    ipc: PlatformIpcImpl,
 }
 
 /// A client that connects to and communicates with the Discord IPC.
 ///
 /// Implemented via the [`DiscordIpcClient`](struct@crate::DiscordIpcClient) struct.
 impl DiscordIpcClient {
-    pub fn new(client_id: impl ToString) -> Self {
-        Self {
-            client_id: client_id.to_string(),
-            connection: IpcConnection {
-                ipc: PlatformIpcImpl::default(),
-            },
-        }
-    }
+    // PRIVATE FUNCTIONS
 
-    /// Returns a reference to the client id of this [`DiscordIpcClient`].
-    pub fn get_client_id(&self) -> &String {
-        &self.client_id
-    }
-
-    /// Connects the client to the Discord IPC.
-    ///
-    /// This method attempts to first establish a connection,
-    /// and then sends a handshake.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `Err` variant if the client
-    /// fails to connect to the socket, or if it fails to
-    /// send a handshake.
-    ///
-    /// # Examples
-    /// ```
-    /// let mut client = DiscordIpcClient::new("<some client id>");
-    /// client.connect()?;
-    /// ```
-    pub fn connect(&mut self) -> Result<Value> {
-        self.connection.connect_ipc()?;
-        self.send_handshake()
-    }
-
-    /// Reconnects to the Discord IPC.
-    ///
-    /// This method closes the client's active connection,
-    /// then re-connects it and re-sends a handshake.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `Err` variant if the client
-    /// failed to connect to the socket, or if it failed to
-    /// send a handshake.
-    ///
-    /// # Examples
-    /// ```
-    /// let mut client = DiscordIpcClient::new("<some client id>");
-    /// client.connect()?;
-    ///
-    /// client.close()?;
-    /// client.reconnect()?;
-    /// ```
-    pub fn reconnect(&mut self) -> Result<Value> {
-        self.disconnect()?;
-        self.connection.connect_ipc()?;
-        self.send_handshake()
-    }
-
-    /// Disconnects from the Discord IPC. Implementation is dependent on platform.
-    pub fn disconnect(&mut self) -> Result<()> {
-        _ = self.connection.send(json!({}), Opcode::Close);
-        // Delegate to trait platform-specific implementation
-        self.connection.close()?;
-        Ok(())
-        // TODO: set connected to false
-    }
-
-    /// Handshakes the Discord IPC.
-    ///
-    /// This method sends the handshake signal to the IPC.
-    /// It is usually not called manually, as it is automatically
-    /// called by [`connect`] and/or [`reconnect`].
-    ///
-    /// [`connect`]: #method.connect
-    /// [`reconnect`]: #method.reconnect
-    ///
-    /// # Errors
-    ///
-    /// Returns an `Err` variant if sending the handshake failed.
-    #[doc(hidden)]
-    fn send_handshake(&mut self) -> Result<Value> {
-        self.send(
-            json!({
-                "v": 1,
-                "client_id": self.get_client_id()
-            }),
-            Opcode::Handshake,
-        )
-    }
-
-    /// Determines if the client is currently connected to the Discord IPC.
-    ///
-    /// PINGs the IPC and returns whether or not the response used the PONG
-    /// opcode.
-    pub fn connected(&mut self) -> bool {
-        if let Ok((_, op)) = self.connection.send(
-            json!(
-                {"v": 1,
-                "client_id": self.get_client_id()}
-            ),
-            Opcode::Ping,
-        ) {
-            return op == Opcode::Pong;
-        }
-        false
-    }
-
-    // ABSTRACTIONS
-
-    /// Sets a Discord activity.
-    ///
-    /// # Errors
-    /// Returns an `Err` variant if sending the payload failed.
-    pub fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
-        self.send(
-            cmd!(
-                SET_ACTIVITY,
-                {
-                    "pid": std::process::id(),
-                    "activity": activity_payload
-                }
-            ),
-            Opcode::Frame,
-        )
-    }
-
-    /// Works the same as as [`set_activity`] but clears activity instead.
-    ///
-    /// [`set_activity`]: #method.set_activity
-    ///
-    /// # Errors
-    /// Returns an `Err` variant if sending the payload failed.
-    pub fn clear_activity(&mut self) -> Result<Value> {
-        self.send(
-            cmd!(
-                SET_ACTIVITY,
-                {
-                    "pid": std::process::id(),
-                    "activity": None::<()>
-                }
-            ),
-            Opcode::Frame,
-        )
-    }
-
-    /// Private function, calls the underlying IPC impl's `send`
-    /// function and returns a mapped version of the result to
-    /// use in abstracted functions in this implementation.
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if sending the data fails.
-    fn send(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
-        self.connection.send(data, opcode).map(|(val, _)| val)
-    }
-}
-
-struct IpcConnection {
-    pub(crate) ipc: PlatformIpcImpl,
-}
-
-impl IpcConnection {
     fn connect_ipc(&mut self) -> Result<()> {
         self.ipc.connect_ipc()
     }
@@ -212,6 +50,17 @@ impl IpcConnection {
         self.ipc.write(data_string.as_bytes())?;
 
         self.recv()
+    }
+
+    /// Private function, calls the [`send`] function and
+    /// returns a mapped version of the result to use in
+    /// abstracted functions in this implementation.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if sending the data fails.
+    fn send_mapped(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
+        self.send(data, opcode).map(|(val, _)| val)
     }
 
     /// Receives an opcode and JSON data from the Discord IPC.
@@ -270,5 +119,152 @@ impl IpcConnection {
             }
         };
         Ok((json_data, opcode))
+    }
+
+    // PUBLIC FUNCTIONS
+
+    pub fn new(client_id: impl ToString) -> Self {
+        Self {
+            client_id: client_id.to_string(),
+            ipc: PlatformIpcImpl::default(),
+        }
+    }
+
+    /// Returns a reference to the client id of this [`DiscordIpcClient`].
+    pub fn get_client_id(&self) -> &String {
+        &self.client_id
+    }
+
+    /// Connects the client to the Discord IPC.
+    ///
+    /// This method attempts to first establish a connection,
+    /// and then sends a handshake.
+    ///
+    /// # Errors
+    ///
+    /// Returns an `Err` variant if the client
+    /// fails to connect to the socket, or if it fails to
+    /// send a handshake.
+    ///
+    /// # Examples
+    /// ```
+    /// let mut client = DiscordIpcClient::new("<some client id>");
+    /// client.connect()?;
+    /// ```
+    pub fn connect(&mut self) -> Result<Value> {
+        self.connect_ipc()?;
+        self.send_handshake()
+    }
+
+    /// Reconnects to the Discord IPC.
+    ///
+    /// This method closes the client's active connection,
+    /// then re-connects it and re-sends a handshake.
+    ///
+    /// # Errors
+    ///
+    /// Returns an `Err` variant if the client
+    /// failed to connect to the socket, or if it failed to
+    /// send a handshake.
+    ///
+    /// # Examples
+    /// ```
+    /// let mut client = DiscordIpcClient::new("<some client id>");
+    /// client.connect()?;
+    ///
+    /// client.close()?;
+    /// client.reconnect()?;
+    /// ```
+    pub fn reconnect(&mut self) -> Result<Value> {
+        self.disconnect()?;
+        self.connect_ipc()?;
+        self.send_handshake()
+    }
+
+    /// Disconnects from the Discord IPC. Implementation is dependent on platform.
+    pub fn disconnect(&mut self) -> Result<()> {
+        _ = self.send(json!({}), Opcode::Close);
+        // Delegate to trait platform-specific implementation
+        self.close()?;
+        Ok(())
+        // TODO: set connected to false
+    }
+
+    /// Handshakes the Discord IPC.
+    ///
+    /// This method sends the handshake signal to the IPC.
+    /// It is usually not called manually, as it is automatically
+    /// called by [`connect`] and/or [`reconnect`].
+    ///
+    /// [`connect`]: #method.connect
+    /// [`reconnect`]: #method.reconnect
+    ///
+    /// # Errors
+    ///
+    /// Returns an `Err` variant if sending the handshake failed.
+    #[doc(hidden)]
+    fn send_handshake(&mut self) -> Result<Value> {
+        self.send_mapped(
+            json!({
+                "v": 1,
+                "client_id": self.get_client_id()
+            }),
+            Opcode::Handshake,
+        )
+    }
+
+    /// Determines if the client is currently connected to the Discord IPC.
+    ///
+    /// PINGs the IPC and returns whether or not the response used the PONG
+    /// opcode.
+    pub fn connected(&mut self) -> bool {
+        if let Ok((_, op)) = self.send(
+            json!(
+                {"v": 1,
+                "client_id": self.get_client_id()}
+            ),
+            Opcode::Ping,
+        ) {
+            return op == Opcode::Pong;
+        }
+        false
+    }
+
+    // ABSTRACTIONS
+
+    /// Sets a Discord activity.
+    ///
+    /// # Errors
+    /// Returns an `Err` variant if sending the payload failed.
+    pub fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
+        self.send_mapped(
+            cmd!(
+                SET_ACTIVITY,
+                {
+                    "pid": std::process::id(),
+                    "activity": activity_payload
+                }
+            ),
+            Opcode::Frame,
+        )
+    }
+
+    /// Works the same as as [`set_activity`] but clears activity instead.
+    ///
+    /// [`set_activity`]: #method.set_activity
+    ///
+    /// # Errors
+    /// Returns an `Err` variant if sending the payload failed.
+    pub fn clear_activity(&mut self) -> Result<Value> {
+        self.send_mapped(
+            cmd!(
+                SET_ACTIVITY,
+                {
+                    "pid": std::process::id(),
+                    "activity": None::<()>
+                }
+            ),
+            Opcode::Frame,
+        )
     }
 }
