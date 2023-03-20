@@ -45,10 +45,10 @@ macro_rules! cmd {
     }
 }
 
-pub fn jsonify_array<T: ToString>(array: &[T]) -> String {
-    array
-        .iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>()
-        .join(", ")
-}
+// pub fn jsonify_array<T: ToString>(array: &[T]) -> String {
+//     array
+//         .iter()
+//         .map(|s| s.to_string())
+//         .collect::<Vec<String>>()
+//         .join(", ")
+// }

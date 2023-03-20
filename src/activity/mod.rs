@@ -1,5 +1,5 @@
 //! Provides an interface for building activities to send
-//! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
+//! to Discord via [`DiscordIpcClient::set_activity`](crate::DiscordIpcClient::set_activity).
 //!
 //! This interface is primarily accessed via the structs provded by the [`builders`]
 //! submodule.

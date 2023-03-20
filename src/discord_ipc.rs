@@ -2,33 +2,39 @@ use crate::{
     activity::Activity,
     cmd,
     error::DiscordError,
-    util::{jsonify_array, pack, unpack},
-    Opcode,
+    util::{pack, unpack},
+    Opcode, PlatformIpcImpl,
 };
 use serde_json::{json, Value};
 use std::{error::Error, io};
-use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
+
+#[allow(dead_code)]
+pub struct DiscordIpcClient {
+    client_id: String,
+    connected: bool,
+    ipc: GenericIpcImpl,
+}
 
 /// A client that connects to and communicates with the Discord IPC.
 ///
 /// Implemented via the [`DiscordIpcClient`](struct@crate::DiscordIpcClient) struct.
-pub trait DiscordIpc {
-    #[doc(hidden)]
-    fn get_client_id(&self) -> &String;
+impl DiscordIpcClient {
+    pub fn new(client_id: impl ToString) -> Self {
+        Self {
+            client_id: client_id.to_string(),
+            connected: true,
+            ipc: GenericIpcImpl {
+                connection: PlatformIpcImpl::default(),
+            },
+        }
+    }
 
-    #[doc(hidden)]
-    fn connect_ipc(&mut self) -> Result<()>;
-
-    #[doc(hidden)]
-    fn close(&mut self) -> io::Result<()>;
-
-    #[doc(hidden)]
-    fn write(&mut self, data: &[u8]) -> io::Result<()>;
-
-    #[doc(hidden)]
-    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()>;
+    /// Returns a reference to the client id of this [`DiscordIpcClient`].
+    pub fn get_client_id(&self) -> &String {
+        &self.client_id
+    }
 
     /// Connects the client to the Discord IPC.
     ///
@@ -46,8 +52,8 @@ pub trait DiscordIpc {
     /// let mut client = DiscordIpcClient::new("<some client id>");
     /// client.connect()?;
     /// ```
-    fn connect(&mut self) -> Result<Value> {
-        self.connect_ipc()?;
+    pub fn connect(&mut self) -> Result<Value> {
+        self.ipc.connect_ipc()?;
         self.send_handshake()
     }
 
@@ -70,16 +76,18 @@ pub trait DiscordIpc {
     /// client.close()?;
     /// client.reconnect()?;
     /// ```
-    fn reconnect(&mut self) -> Result<Value> {
+    pub fn reconnect(&mut self) -> Result<Value> {
         self.disconnect()?;
-        self.connect_ipc()?;
+        self.ipc.connect_ipc()?;
         self.send_handshake()
     }
 
     /// Disconnects from the Discord IPC. Implementation is dependent on platform.
-    fn disconnect(&mut self) -> io::Result<()> {
+    pub fn disconnect(&mut self) -> Result<()> {
+        _ = self.ipc.send(json!({}), Opcode::Close);
         // Delegate to trait platform-specific implementation
-        self.close()
+        self.ipc.close()?;
+        Ok(())
         // TODO: set connected to false
     }
 
@@ -97,6 +105,17 @@ pub trait DiscordIpc {
     /// Returns an `Err` variant if sending the handshake failed.
     #[doc(hidden)]
     fn send_handshake(&mut self) -> Result<Value> {
+        self.ipc
+            .send(
+                json!({
+                    "v": 1,
+                    "client_id": self.get_client_id()
+                }),
+                Opcode::Handshake,
+            )
+            .map(|(val, _)| val)
+    }
+
         self.send(
             json!({
                 "v": 1,
@@ -104,6 +123,61 @@ pub trait DiscordIpc {
             }),
             Opcode::Handshake,
         )
+
+    // ABSTRACTIONS
+
+    /// Sets a Discord activity.
+    ///
+    /// # Errors
+    /// Returns an `Err` variant if sending the payload failed.
+    pub fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
+        self.ipc
+            .send(
+                cmd!(
+                    SET_ACTIVITY,
+                    {
+                        "pid": std::process::id(),
+                        "activity": activity_payload
+                    }
+                ),
+                Opcode::Frame,
+            )
+            .map(|(val, _)| val)
+    }
+
+    /// Works the same as as [`set_activity`] but clears activity instead.
+    ///
+    /// [`set_activity`]: #method.set_activity
+    ///
+    /// # Errors
+    /// Returns an `Err` variant if sending the payload failed.
+    pub fn clear_activity(&mut self) -> Result<Value> {
+        self.ipc
+            .send(
+                cmd!(
+                    SET_ACTIVITY,
+                    {
+                        "pid": std::process::id(),
+                        "activity": None::<()>
+                    }
+                ),
+                Opcode::Frame,
+            )
+            .map(|(val, _)| val)
+    }
+}
+
+struct GenericIpcImpl {
+    pub(crate) connection: PlatformIpcImpl,
+}
+
+impl GenericIpcImpl {
+    fn connect_ipc(&mut self) -> Result<()> {
+        self.connection.connect_ipc()
+    }
+
+    fn close(&mut self) -> io::Result<()> {
+        self.connection.close()
     }
 
     /// Sends JSON data to the Discord IPC.
@@ -119,12 +193,12 @@ pub trait DiscordIpc {
     /// let payload = serde_json::json!({ "field": "value" });
     /// client.send(payload, Opcode::Handshake)?;
     /// ```
-    fn send(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
+    fn send(&mut self, data: Value, opcode: Opcode) -> Result<(Value, Opcode)> {
         let data_string = data.to_string();
         let header = pack(opcode.into(), data_string.len() as u32);
 
-        self.write(&header)?;
-        self.write(data_string.as_bytes())?;
+        self.connection.write(&header)?;
+        self.connection.write(data_string.as_bytes())?;
 
         self.recv()
     }
@@ -144,16 +218,15 @@ pub trait DiscordIpc {
     ///
     /// println!("{:?}", client.recv()?);
     /// ```
-    #[doc(hidden)]
-    fn recv(&mut self) -> Result<Value> {
+    fn recv(&mut self) -> Result<(Value, Opcode)> {
         let mut header = [0; 8];
 
-        self.read(&mut header)?;
+        self.connection.read(&mut header)?;
         let (op, length) = unpack(header.to_vec())?;
         let opcode = Opcode::from(op);
 
         let mut data = vec![0u8; length as usize];
-        self.read(&mut data)?;
+        self.connection.read(&mut data)?;
 
         let response = String::from_utf8(data.to_vec())?;
         let json_data = serde_json::from_str::<Value>(&response)?;
@@ -185,49 +258,6 @@ pub trait DiscordIpc {
                 .into());
             }
         };
-        Ok(json_data)
-    }
-
-    // ABSTRACTIONS
-
-    /// Sets a Discord activity.
-    ///
-    /// This method is an abstraction of [`send`], wrapping it such that only an
-    /// activity payload is required.
-    ///
-    /// [`send`]: #method.send
-    ///
-    /// # Errors
-    /// Returns an `Err` variant if sending the payload failed.
-    fn set_activity(&mut self, activity_payload: Activity) -> Result<Value> {
-        self.send(
-            cmd!(
-                SET_ACTIVITY,
-                {
-                    "pid": std::process::id(),
-                    "activity": activity_payload
-                }
-            ),
-            Opcode::Frame,
-        )
-    }
-
-    /// Works the same as as [`set_activity`] but clears activity instead.
-    ///
-    /// [`set_activity`]: #method.set_activity
-    ///
-    /// # Errors
-    /// Returns an `Err` variant if sending the payload failed.
-    fn clear_activity(&mut self) -> Result<Value> {
-        self.send(
-            cmd!(
-                SET_ACTIVITY,
-                {
-                    "pid": std::process::id(),
-                    "activity": None::<()>
-                }
-            ),
-            Opcode::Frame,
-        )
+        Ok((json_data, opcode))
     }
 }

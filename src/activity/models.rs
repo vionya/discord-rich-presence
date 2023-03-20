@@ -2,7 +2,7 @@
 use serde_derive::Serialize;
 
 /// A struct representing a Discord rich presence activity
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Activity {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) state: Option<String>,
@@ -21,7 +21,7 @@ pub struct Activity {
 }
 
 /// A struct representing an `Activity`'s timestamps
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Timestamps {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) start: Option<i64>,
@@ -30,7 +30,7 @@ pub struct Timestamps {
 }
 
 /// A struct representing an `Activity`'s game party
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Party {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) id: Option<String>,
@@ -40,7 +40,7 @@ pub struct Party {
 
 /// A struct representing the art assets and hover text
 /// used by an `Activity`
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Assets {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) large_image: Option<String>,
@@ -54,7 +54,7 @@ pub struct Assets {
 
 /// A struct representing the secrets used by an
 /// `Activity`
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Secrets {
     #[serde(skip_serializing_if = "Option::is_none", rename = "join")]
     pub(crate) join_secret: Option<String>,
@@ -68,7 +68,7 @@ pub struct Secrets {
 /// attached to an [`Activity`]
 ///
 /// An activity may have a maximum of 2 buttons
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Button {
     pub(crate) label: String,
     pub(crate) url: String,

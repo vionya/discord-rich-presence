@@ -1,4 +1,4 @@
-use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use discord_rich_presence::{activity, DiscordIpcClient};
 use std::error::Error;
 
 #[test]
@@ -45,9 +45,10 @@ fn test_models() -> Result<(), Box<dyn Error>> {
     );
 
     client.set_activity(activity)?;
-    std::thread::park();
-    // std::thread::sleep(std::time::Duration::from_secs(3));
+    dbg!(client.connected());
     client.disconnect()?;
+    dbg!(client.connected());
+    std::thread::park();
 
     Ok(())
 }

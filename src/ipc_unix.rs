@@ -1,5 +1,3 @@
-use crate::{discord_ipc::DiscordIpc, Opcode};
-use serde_json::json;
 use std::os::unix::net::UnixStream;
 use std::{
     env::var,
@@ -14,31 +12,12 @@ const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-#[allow(dead_code)]
-/// A wrapper struct for the functionality contained in the
-/// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
-pub struct DiscordIpcClient {
-    /// Client ID of the IPC client.
-    pub client_id: String,
-    connected: bool,
+#[derive(Default)]
+pub(crate) struct PlatformIpcImpl {
     socket: Option<UnixStream>,
 }
 
-impl DiscordIpcClient {
-    /// Creates a new `DiscordIpcClient`.
-    ///
-    /// # Examples
-    /// ```
-    /// let ipc_client = DiscordIpcClient::new("<some client id>");
-    /// ```
-    pub fn new(client_id: &str) -> Self {
-        Self {
-            client_id: client_id.to_string(),
-            connected: false,
-            socket: None,
-        }
-    }
-
+impl PlatformIpcImpl {
     fn get_pipe_pattern() -> PathBuf {
         let mut path = String::new();
 
@@ -54,12 +33,10 @@ impl DiscordIpcClient {
         }
         PathBuf::from(path)
     }
-}
 
-impl DiscordIpc for DiscordIpcClient {
-    fn connect_ipc(&mut self) -> Result<()> {
+    pub(crate) fn connect_ipc(&mut self) -> Result<()> {
         for i in 0..10 {
-            let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
+            let path = Self::get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
             if let Ok(socket) = UnixStream::connect(&path) {
                 self.socket = Some(socket);
@@ -70,19 +47,17 @@ impl DiscordIpc for DiscordIpcClient {
         Err("Couldn't connect to the Discord IPC socket".into())
     }
 
-    fn write(&mut self, data: &[u8]) -> io::Result<()> {
+    pub(crate) fn write(&mut self, data: &[u8]) -> io::Result<()> {
         let socket = self.socket.as_mut().expect("Client not connected");
         socket.write_all(data)
     }
 
-    fn read(&mut self, buffer: &mut [u8]) -> io::Result<()> {
+    pub(crate) fn read(&mut self, buffer: &mut [u8]) -> io::Result<()> {
         let socket = self.socket.as_mut().unwrap();
         socket.read_exact(buffer)
     }
 
-    fn close(&mut self) -> io::Result<()> {
-        _ = self.send(json!({}), Opcode::Close);
-
+    pub(crate) fn close(&mut self) -> io::Result<()> {
         let socket = self.socket.as_mut().unwrap();
         socket.flush()?;
         // Shutdown, but we don't care about if it's successful or not
@@ -92,9 +67,5 @@ impl DiscordIpc for DiscordIpcClient {
         };
 
         Ok(())
-    }
-
-    fn get_client_id(&self) -> &String {
-        &self.client_id
     }
 }

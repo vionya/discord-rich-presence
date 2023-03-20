@@ -40,7 +40,9 @@ mod ipc_windows;
 #[cfg(windows)]
 use ipc_windows as ipc;
 
-pub use ipc::DiscordIpcClient;
+use ipc::PlatformIpcImpl;
+
+pub use discord_ipc::DiscordIpcClient;
 
 /// Models Discord's RPC opcodes for convenience
 #[derive(Debug, PartialEq)]
