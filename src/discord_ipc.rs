@@ -12,7 +12,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 pub struct DiscordIpcClient {
     client_id: String,
-    ipc: GenericIpcImpl,
+    connection: IpcConnection,
 }
 
 /// A client that connects to and communicates with the Discord IPC.
@@ -22,8 +22,8 @@ impl DiscordIpcClient {
     pub fn new(client_id: impl ToString) -> Self {
         Self {
             client_id: client_id.to_string(),
-            ipc: GenericIpcImpl {
-                connection: PlatformIpcImpl::default(),
+            connection: IpcConnection {
+                ipc: PlatformIpcImpl::default(),
             },
         }
     }
@@ -50,7 +50,7 @@ impl DiscordIpcClient {
     /// client.connect()?;
     /// ```
     pub fn connect(&mut self) -> Result<Value> {
-        self.ipc.connect_ipc()?;
+        self.connection.connect_ipc()?;
         self.send_handshake()
     }
 
@@ -75,15 +75,15 @@ impl DiscordIpcClient {
     /// ```
     pub fn reconnect(&mut self) -> Result<Value> {
         self.disconnect()?;
-        self.ipc.connect_ipc()?;
+        self.connection.connect_ipc()?;
         self.send_handshake()
     }
 
     /// Disconnects from the Discord IPC. Implementation is dependent on platform.
     pub fn disconnect(&mut self) -> Result<()> {
-        _ = self.ipc.send(json!({}), Opcode::Close);
+        _ = self.connection.send(json!({}), Opcode::Close);
         // Delegate to trait platform-specific implementation
-        self.ipc.close()?;
+        self.connection.close()?;
         Ok(())
         // TODO: set connected to false
     }
@@ -116,7 +116,7 @@ impl DiscordIpcClient {
     /// PINGs the IPC and returns whether or not the response used the PONG
     /// opcode.
     pub fn connected(&mut self) -> bool {
-        if let Ok((_, op)) = self.ipc.send(
+        if let Ok((_, op)) = self.connection.send(
             json!(
                 {"v": 1,
                 "client_id": self.get_client_id()}
@@ -174,21 +174,21 @@ impl DiscordIpcClient {
     ///
     /// This function will return an error if sending the data fails.
     fn send_mapped(&mut self, data: Value, opcode: Opcode) -> Result<Value> {
-        self.ipc.send(data, opcode).map(|(val, _)| val)
+        self.connection.send(data, opcode).map(|(val, _)| val)
     }
 }
 
-struct GenericIpcImpl {
-    pub(crate) connection: PlatformIpcImpl,
+struct IpcConnection {
+    pub(crate) ipc: PlatformIpcImpl,
 }
 
-impl GenericIpcImpl {
+impl IpcConnection {
     fn connect_ipc(&mut self) -> Result<()> {
-        self.connection.connect_ipc()
+        self.ipc.connect_ipc()
     }
 
     fn close(&mut self) -> io::Result<()> {
-        self.connection.close()
+        self.ipc.close()
     }
 
     /// Sends JSON data to the Discord IPC.
@@ -208,8 +208,8 @@ impl GenericIpcImpl {
         let data_string = data.to_string();
         let header = pack(opcode.into(), data_string.len() as u32);
 
-        self.connection.write(&header)?;
-        self.connection.write(data_string.as_bytes())?;
+        self.ipc.write(&header)?;
+        self.ipc.write(data_string.as_bytes())?;
 
         self.recv()
     }
@@ -232,12 +232,12 @@ impl GenericIpcImpl {
     fn recv(&mut self) -> Result<(Value, Opcode)> {
         let mut header = [0; 8];
 
-        self.connection.read(&mut header)?;
+        self.ipc.read(&mut header)?;
         let (op, length) = unpack(header.to_vec())?;
         let opcode = Opcode::from(op);
 
         let mut data = vec![0u8; length as usize];
-        self.connection.read(&mut data)?;
+        self.ipc.read(&mut data)?;
 
         let response = String::from_utf8(data.to_vec())?;
         let json_data = serde_json::from_str::<Value>(&response)?;
