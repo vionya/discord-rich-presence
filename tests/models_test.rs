@@ -46,7 +46,7 @@ fn test_models() -> Result<(), Box<dyn Error>> {
 
     client.set_activity(activity)?;
     dbg!(client.connected());
-    client.disconnect()?;
+    // client.disconnect()?;
     dbg!(client.connected());
     std::thread::park();
 

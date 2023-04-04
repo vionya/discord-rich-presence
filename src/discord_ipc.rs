@@ -16,8 +16,6 @@ pub struct DiscordIpcClient {
 }
 
 /// A client that connects to and communicates with the Discord IPC.
-///
-/// Implemented via the [`DiscordIpcClient`](struct@crate::DiscordIpcClient) struct.
 impl DiscordIpcClient {
     // PRIVATE FUNCTIONS
 
@@ -187,7 +185,6 @@ impl DiscordIpcClient {
         // Delegate to trait platform-specific implementation
         self.close()?;
         Ok(())
-        // TODO: set connected to false
     }
 
     /// Handshakes the Discord IPC.
