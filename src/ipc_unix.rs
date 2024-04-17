@@ -12,6 +12,13 @@ use std::{
 // Environment keys to search for the Discord pipe
 const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 
+const APP_SUBPATHS: [&str; 4] = [
+    "",
+    "app/com.discordapp.Discord/",
+    "snap.discord-canary/",
+    "snap.discord/",
+];
+
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
@@ -60,14 +67,18 @@ impl DiscordIpcClient {
 impl DiscordIpc for DiscordIpcClient {
     fn connect_ipc(&mut self) -> Result<()> {
         for i in 0..10 {
-            let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
+            for subpath in APP_SUBPATHS {
+                let path = DiscordIpcClient::get_pipe_pattern()
+                    .join(subpath)
+                    .join(format!("discord-ipc-{}", i));
 
-            match UnixStream::connect(&path) {
-                Ok(socket) => {
-                    self.socket = Some(socket);
-                    return Ok(());
+                match UnixStream::connect(&path) {
+                    Ok(socket) => {
+                        self.socket = Some(socket);
+                        return Ok(());
+                    }
+                    Err(_) => continue,
                 }
-                Err(_) => continue,
             }
         }
 
