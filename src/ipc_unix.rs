@@ -10,6 +10,13 @@ use std::{
 // Environment keys to search for the Discord pipe
 const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 
+const APP_SUBPATHS: [&str; 4] = [
+    "",
+    "app/com.discordapp.Discord/",
+    "snap.discord-canary/",
+    "snap.discord/",
+];
+
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Default)]
@@ -36,11 +43,15 @@ impl PlatformIpcImpl {
 
     pub(crate) fn connect_ipc(&mut self) -> Result<()> {
         for i in 0..10 {
-            let path = Self::get_pipe_pattern().join(format!("discord-ipc-{}", i));
+            for subpath in APP_SUBPATHS {
+                let path = Self::get_pipe_pattern()
+                    .join(subpath)
+                    .join(format!("discord-ipc-{}", i));
 
-            if let Ok(socket) = UnixStream::connect(&path) {
-                self.socket = Some(socket);
-                return Ok(());
+                if let Ok(socket) = UnixStream::connect(&path) {
+                    self.socket = Some(socket);
+                    return Ok(());
+                }
             }
         }
 
