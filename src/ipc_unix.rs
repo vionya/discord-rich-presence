@@ -29,13 +29,9 @@ impl PlatformIpcImpl {
         let mut path = String::new();
 
         for key in &ENV_KEYS {
-            // TODO: Refactor to if let
-            match var(key) {
-                Ok(val) => {
-                    path = val;
-                    break;
-                }
-                Err(_e) => continue,
+            if let Ok(val) = var(key) {
+                path = val;
+                break;
             }
         }
         PathBuf::from(path)
