@@ -22,6 +22,7 @@ const APP_SUBPATHS: [&str; 4] = [
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[allow(dead_code)]
+#[derive(Debug)]
 /// A wrapper struct for the functionality contained in the
 /// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
 pub struct DiscordIpcClient {
