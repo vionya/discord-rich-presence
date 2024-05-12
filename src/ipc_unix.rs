@@ -19,7 +19,7 @@ const APP_SUBPATHS: [&str; 4] = [
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct PlatformIpcImpl {
     socket: Option<UnixStream>,
 }

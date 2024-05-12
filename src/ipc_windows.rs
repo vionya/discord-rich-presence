@@ -8,7 +8,7 @@ use std::{
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct PlatformIpcImpl {
     reader: Option<BufReader<File>>,
     writer: Option<File>,
