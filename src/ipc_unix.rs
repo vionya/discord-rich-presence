@@ -106,7 +106,7 @@ impl DiscordIpc for DiscordIpcClient {
 
     fn close(&mut self) -> Result<()> {
         let data = json!({});
-        if self.send(data, 2).is_ok() {}
+        if self.send(data, 2).is_ok() {} // ?
 
         let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
 

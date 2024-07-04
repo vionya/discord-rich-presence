@@ -10,14 +10,14 @@ pub enum Error {
     NotConnected,
 
     /// IO error while using the socket
-    #[error("Error while interacting with Discord's IPC")]
+    #[error("Error while interacting with Discord's IPC: {0}")]
     IPCIO(#[from] std::io::Error),
 
     /// Error while parsing data
     #[error("{0}")] // Transparent doesn't work on String
     Deserialisation(String),
 
-    /// TODO
+    /// Packing / Unpacking data failed
     #[error(
         "Could not unpack Discord IPC's data, expected {expected} bytes but found {received} bytes"
     )]
