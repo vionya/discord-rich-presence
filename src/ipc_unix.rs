@@ -87,7 +87,10 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().expect("Client not connected");
+        let socket = self.socket.as_mut().ok_or(std::io::Error::new(
+            std::io::ErrorKind::ConnectionRefused,
+            "Couldn't retrieve the Discord IPC socket",
+        ))?;
 
         socket.write_all(data)?;
 
@@ -95,7 +98,10 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
-        let socket = self.socket.as_mut().unwrap();
+        let socket = self.socket.as_mut().ok_or(std::io::Error::new(
+            std::io::ErrorKind::ConnectionRefused,
+            "Couldn't retrieve the Discord IPC socket",
+        ))?;
 
         socket.read_exact(buffer)?;
 
@@ -106,7 +112,10 @@ impl DiscordIpc for DiscordIpcClient {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
-        let socket = self.socket.as_mut().unwrap();
+        let socket = self.socket.as_mut().ok_or(std::io::Error::new(
+            std::io::ErrorKind::ConnectionRefused,
+            "Couldn't retrieve the Discord IPC socket",
+        ))?;
 
         socket.flush()?;
         match socket.shutdown(Shutdown::Both) {
