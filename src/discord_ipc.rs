@@ -6,7 +6,7 @@ use crate::{
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-type Result<T> = std::result::Result<T, crate::Error>;
+type Result<T> = std::result::Result<T, Error>;
 
 /// A client that connects to and communicates with the Discord IPC.
 ///

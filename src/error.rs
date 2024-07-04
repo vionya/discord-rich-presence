@@ -1,25 +1,25 @@
 #[derive(Debug, thiserror::Error)]
 /// A collection of the possible error
 pub enum Error {
-    /// TODO
+    /// Could not create the connection
     #[error("Could not connect to Discord's IPC socket")]
     IPCConnectionFailled,
 
-    /// Client is not connected
-    #[error("Could not get the underlying socket, client probably not connected")]
-    Socket,
+    /// Underlying socket unreachable
+    #[error("Could not get the underlying socket, client is probably not connected")]
+    NotConnected,
 
-    /// TODO
+    /// IO error while using the socket
     #[error("Error while interacting with Discord's IPC")]
     IPCIO(#[from] std::io::Error),
 
-    /// TODO
+    /// Error while parsing data
     #[error("{0}")] // Transparent doesn't work on String
     Deserialisation(String),
 
     /// TODO
     #[error(
-        "Could not unpack Discord IPC's data, expected: len {expected} but found len {received}"
+        "Could not unpack Discord IPC's data, expected {expected} bytes but found {received} bytes"
     )]
     Unpack {
         /// Expected data size

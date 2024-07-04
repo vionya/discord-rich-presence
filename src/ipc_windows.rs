@@ -53,12 +53,11 @@ impl DiscordIpc for DiscordIpcClient {
             }
         }
 
-        return Err(Error::IPCConnectionFailled);
-        // Err("Couldn't connect to the Discord IPC socket".into())
+        Err(Error::IPCConnectionFailled)
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().ok_or(Error::Socket)?;
+        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
 
         socket.write_all(data)?;
 
@@ -66,7 +65,7 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
-        let socket = self.socket.as_mut().ok_or(Error::Socket)?;
+        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
 
         socket.read_exact(buffer)?;
 
@@ -77,7 +76,7 @@ impl DiscordIpc for DiscordIpcClient {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
-        let socket = self.socket.as_mut().ok_or(Error::Socket)?;
+        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
         socket.flush()?;
 
         Ok(())
