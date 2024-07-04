@@ -1,14 +1,14 @@
 use crate::discord_ipc::DiscordIpc;
+use crate::Error;
 use serde_json::json;
 use std::{
-    error::Error,
     fs::{File, OpenOptions},
     io::{Read, Write},
     os::windows::fs::OpenOptionsExt,
     path::PathBuf,
 };
 
-type Result<T> = std::result::Result<T, Box<dyn Error>>;
+type Result<T> = std::result::Result<T, Error>;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -53,11 +53,12 @@ impl DiscordIpc for DiscordIpcClient {
             }
         }
 
-        Err("Couldn't connect to the Discord IPC socket".into())
+        return Err(Error::IPCConnectionFailled);
+        // Err("Couldn't connect to the Discord IPC socket".into())
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().expect("Client not connected");
+        let socket = self.socket.as_mut().ok_or(Error::Socket)?;
 
         socket.write_all(data)?;
 
@@ -65,7 +66,7 @@ impl DiscordIpc for DiscordIpcClient {
     }
 
     fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
-        let socket = self.socket.as_mut().unwrap();
+        let socket = self.socket.as_mut().ok_or(Error::Socket)?;
 
         socket.read_exact(buffer)?;
 
@@ -76,7 +77,7 @@ impl DiscordIpc for DiscordIpcClient {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
-        let socket = self.socket.as_mut().unwrap();
+        let socket = self.socket.as_mut().ok_or(Error::Socket)?;
         socket.flush()?;
 
         Ok(())
