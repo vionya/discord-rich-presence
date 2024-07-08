@@ -77,6 +77,7 @@ impl DiscordIpc for DiscordIpcClient {
         if self.send(data, 2).is_ok() {} // ?
 
         let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
+
         socket.flush()?;
 
         Ok(())
