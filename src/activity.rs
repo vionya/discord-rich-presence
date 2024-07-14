@@ -2,6 +2,8 @@
 //! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
 use serde_derive::Serialize;
 
+use std::borrow::Cow;
+
 /// A struct representing a Discord rich presence activity
 ///
 /// Note that all methods return `Self`, and can be chained
@@ -9,10 +11,10 @@ use serde_derive::Serialize;
 #[derive(Serialize, Clone)]
 pub struct Activity<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    state: Option<&'a str>,
+    state: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    details: Option<&'a str>,
+    details: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     timestamps: Option<Timestamps>,
@@ -50,7 +52,7 @@ pub struct Timestamps {
 #[derive(Serialize, Clone)]
 pub struct Party<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    id: Option<&'a str>,
+    id: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<[i32; 2]>,
@@ -64,16 +66,16 @@ pub struct Party<'a> {
 #[derive(Serialize, Clone)]
 pub struct Assets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    large_image: Option<&'a str>,
+    large_image: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    large_text: Option<&'a str>,
+    large_text: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    small_image: Option<&'a str>,
+    small_image: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    small_text: Option<&'a str>,
+    small_text: Option<Cow<'a, str>>,
 }
 
 /// A struct representing the secrets used by an
@@ -84,13 +86,13 @@ pub struct Assets<'a> {
 #[derive(Serialize, Clone)]
 pub struct Secrets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    join: Option<&'a str>,
+    join: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    spectate: Option<&'a str>,
+    spectate: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    r#match: Option<&'a str>,
+    r#match: Option<Cow<'a, str>>,
 }
 
 /// A struct representing the buttons that are
@@ -99,8 +101,8 @@ pub struct Secrets<'a> {
 /// An activity may have a maximum of 2 buttons
 #[derive(Serialize, Clone)]
 pub struct Button<'a> {
-    label: &'a str,
-    url: &'a str,
+    label: Cow<'a, str>,
+    url: Cow<'a, str>,
 }
 
 impl<'a> Activity<'a> {
@@ -118,14 +120,14 @@ impl<'a> Activity<'a> {
     }
 
     /// Sets the state of the activity
-    pub fn state(mut self, state: &'a str) -> Self {
-        self.state = Some(state);
+    pub fn state(mut self, state: impl Into<Cow<'a, str>>) -> Self {
+        self.state = Some(state.into());
         self
     }
 
     /// Sets the details of the activity
-    pub fn details(mut self, details: &'a str) -> Self {
-        self.details = Some(details);
+    pub fn details(mut self, details: impl Into<Cow<'a, str>>) -> Self {
+        self.details = Some(details.into());
         self
     }
 
@@ -212,8 +214,8 @@ impl<'a> Party<'a> {
     }
 
     /// Sets the ID of the party
-    pub fn id(mut self, id: &'a str) -> Self {
-        self.id = Some(id);
+    pub fn id(mut self, id: impl Into<Cow<'a, str>>) -> Self {
+        self.id = Some(id.into());
         self
     }
 
@@ -253,15 +255,15 @@ impl<'a> Assets<'a> {
     ///
     /// Alternatively, the URL of the resource to be used as
     /// the large image
-    pub fn large_image(mut self, large_image: &'a str) -> Self {
-        self.large_image = Some(large_image);
+    pub fn large_image(mut self, large_image: impl Into<Cow<'a, str>>) -> Self {
+        self.large_image = Some(large_image.into());
         self
     }
 
     /// Sets the text to be shown when hovering over the large
     /// image
-    pub fn large_text(mut self, large_text: &'a str) -> Self {
-        self.large_text = Some(large_text);
+    pub fn large_text(mut self, large_text: impl Into<Cow<'a, str>>) -> Self {
+        self.large_text = Some(large_text.into());
         self
     }
 
@@ -270,15 +272,15 @@ impl<'a> Assets<'a> {
     ///
     /// Alternatively, the URL of the resource to be used as
     /// the small image
-    pub fn small_image(mut self, small_image: &'a str) -> Self {
-        self.small_image = Some(small_image);
+    pub fn small_image(mut self, small_image: impl Into<Cow<'a, str>>) -> Self {
+        self.small_image = Some(small_image.into());
         self
     }
 
     /// Sets the text that is shown when hovering over the small
     /// image
-    pub fn small_text(mut self, small_text: &'a str) -> Self {
-        self.small_text = Some(small_text);
+    pub fn small_text(mut self, small_text: impl Into<Cow<'a, str>>) -> Self {
+        self.small_text = Some(small_text.into());
         self
     }
 }
@@ -300,20 +302,20 @@ impl<'a> Secrets<'a> {
     }
 
     /// Sets the secret for joining a game party
-    pub fn join(mut self, join: &'a str) -> Self {
-        self.join = Some(join);
+    pub fn join(mut self, join: impl Into<Cow<'a, str>>) -> Self {
+        self.join = Some(join.into());
         self
     }
 
     /// Sets the secret for spectating a match
-    pub fn spectate(mut self, spectate: &'a str) -> Self {
-        self.spectate = Some(spectate);
+    pub fn spectate(mut self, spectate: impl Into<Cow<'a, str>>) -> Self {
+        self.spectate = Some(spectate.into());
         self
     }
 
     /// Sets the secret for a specific, instanced match
-    pub fn r#match(mut self, r#match: &'a str) -> Self {
-        self.r#match = Some(r#match);
+    pub fn r#match(mut self, r#match: impl Into<Cow<'a, str>>) -> Self {
+        self.r#match = Some(r#match.into());
         self
     }
 }
@@ -331,7 +333,10 @@ impl<'a> Button<'a> {
     /// The label must be 1-32 characters long
     ///
     /// The URL must be 1-512 characters long
-    pub fn new(label: &'a str, url: &'a str) -> Self {
-        Button { label, url }
+    pub fn new(label: impl Into<Cow<'a, str>>, url: impl Into<Cow<'a, str>>) -> Self {
+        Button { 
+            label: label.into(), 
+            url: url.into() 
+        }
     }
 }
