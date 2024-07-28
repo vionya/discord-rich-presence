@@ -1,6 +1,7 @@
 //! Provides an interface for building activities to send
 //! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
 use serde_derive::Serialize;
+use serde_repr::Serialize_repr;
 
 /// A struct representing a Discord rich presence activity
 ///
@@ -28,6 +29,9 @@ pub struct Activity<'a> {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     buttons: Option<Vec<Button<'a>>>,
+
+    #[serde(skip_serializing_if = "Option::is_none", rename = "type")]
+    activity_type: Option<ActivityType>,
 }
 
 /// A struct representing an `Activity`'s timestamps
@@ -103,6 +107,20 @@ pub struct Button<'a> {
     url: &'a str,
 }
 
+/// A struct to set the Activity Type of the `Activity`
+#[derive(Serialize_repr, Clone)]
+#[repr(u8)]
+pub enum ActivityType {
+    /// Activity type "Playing X"
+    Playing = 0,
+    /// Activity type "Listening to X"
+    Listening = 2,
+    /// Activity type "Watching X"
+    Watching = 3,
+    /// Activity type "Competing in X"
+    Competing = 5,
+}
+
 impl<'a> Activity<'a> {
     /// Creates a new `Activity`
     pub fn new() -> Self {
@@ -114,6 +132,7 @@ impl<'a> Activity<'a> {
             party: None,
             secrets: None,
             timestamps: None,
+            activity_type: None,
         }
     }
 
@@ -164,6 +183,12 @@ impl<'a> Activity<'a> {
         }
 
         self.buttons = Some(buttons);
+        self
+    }
+
+    /// Add an `ActivityType` to this activity
+    pub fn activity_type(mut self, activity_type: ActivityType) -> Self {
+        self.activity_type = Some(activity_type);
         self
     }
 }
