@@ -1,12 +1,12 @@
+use crate::Error;
 use crate::{
     activity::Activity,
     pack_unpack::{pack, unpack},
 };
 use serde_json::{json, Value};
-use std::error::Error;
 use uuid::Uuid;
 
-type Result<T> = std::result::Result<T, Box<dyn Error>>;
+type Result<T> = std::result::Result<T, Error>;
 
 /// A client that connects to and communicates with the Discord IPC.
 ///
@@ -145,8 +145,17 @@ pub trait DiscordIpc {
         let mut data = vec![0u8; length as usize];
         self.read(&mut data)?;
 
-        let response = String::from_utf8(data.to_vec())?;
-        let json_data = serde_json::from_str::<Value>(&response)?;
+        let response = String::from_utf8(data.to_vec()).map_err(|e| {
+            let upto = e.utf8_error().valid_up_to();
+            // "Could not map received data to a string, failed at {upto}, peek: ({:?})",
+            // data[(upto - 5).max(0)..(upto + 5).min(data.len() - 1)].to_vec()
+            Error::Deserialisation(format!(
+                "Could not understand received data: {data:?}, failed at index: {upto}"
+            ))
+        })?;
+        let json_data = serde_json::from_str::<Value>(&response).map_err(|_e| {
+            Error::Deserialisation(format!("Failled to parse json response: {response}"))
+        })?;
 
         Ok((op, json_data))
     }
@@ -179,9 +188,9 @@ pub trait DiscordIpc {
     }
 
     /// Works the same as as [`set_activity`] but clears activity instead.
-    /// 
+    ///
     /// [`set_activity`]: #method.set_activity
-    /// 
+    ///
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn clear_activity(&mut self) -> Result<()> {
@@ -193,7 +202,7 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        
+
         self.send(data, 1)?;
 
         Ok(())

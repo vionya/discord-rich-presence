@@ -36,6 +36,9 @@ use ipc_windows as ipc;
 
 pub use ipc::DiscordIpcClient;
 
+mod error;
+pub use error::Error;
+
 #[deprecated(since = "0.2.0", note = "use DiscordIpcClient::new() instead")]
 /// Creates a new client to connect to the Discord IPC. Functionally
 /// identical to [`DiscordIpcClient::new()`].
@@ -44,6 +47,6 @@ pub use ipc::DiscordIpcClient;
 /// ```
 /// let ipc_client = discord_ipc_client::new_client("<some client id>")?;
 /// ```
-pub fn new_client(client_id: &str) -> Result<impl DiscordIpc, Box<dyn std::error::Error>> {
+pub fn new_client(client_id: &str) -> Result<impl DiscordIpc, Error> {
     ipc::DiscordIpcClient::new(client_id)
 }
