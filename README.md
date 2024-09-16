@@ -22,3 +22,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+### Running example on the CLI
+The repository comes with an example you can run with cargo to set a dummy activity. Just provide a valid Client ID as the argument:
+
+```
+cargo run --example presence <CLIENT_ID>
+```
