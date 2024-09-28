@@ -7,7 +7,7 @@ use serde_repr::Serialize_repr;
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Activity<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     state: Option<&'a str>,
@@ -38,7 +38,7 @@ pub struct Activity<'a> {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Timestamps {
     #[serde(skip_serializing_if = "Option::is_none")]
     start: Option<i64>,
@@ -51,7 +51,7 @@ pub struct Timestamps {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Party<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<&'a str>,
@@ -65,7 +65,7 @@ pub struct Party<'a> {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Assets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     large_image: Option<&'a str>,
@@ -85,7 +85,7 @@ pub struct Assets<'a> {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Secrets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     join: Option<&'a str>,
@@ -101,7 +101,7 @@ pub struct Secrets<'a> {
 /// attached to an `Activity`
 ///
 /// An activity may have a maximum of 2 buttons
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq)]
 pub struct Button<'a> {
     label: &'a str,
     url: &'a str,
