@@ -50,6 +50,7 @@ impl DiscordIpcClient {
     }
 
     fn get_pipe_pattern() -> PathBuf {
+        println!("{}", var("SNAP").is_ok());
         let mut path = String::new();
 
         for key in &ENV_KEYS {
@@ -81,12 +82,17 @@ impl DiscordIpc for DiscordIpcClient {
                     .join(subpath)
                     .join(format!("discord-ipc-{}", i));
 
+                println!("{}", path.display());
+
                 match UnixStream::connect(&path) {
                     Ok(socket) => {
                         self.socket = Some(socket);
                         return Ok(());
                     }
-                    Err(_) => continue,
+                    Err(err) => {
+                        print!("{} ", err);
+                        continue;
+                    },
                 }
             }
         }
