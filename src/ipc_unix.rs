@@ -55,7 +55,15 @@ impl DiscordIpcClient {
         for key in &ENV_KEYS {
             match var(key) {
                 Ok(val) => {
-                    path = val;
+                    if var("SNAP").is_ok() {
+                        if key == &ENV_KEYS[0] {
+                            path = val.rsplit_once('/').map(|(parent, _)| parent)
+                            .unwrap_or("").to_string();
+                        } 
+                    }
+                    else {
+                        path = val;
+                    }
                     break;
                 }
                 Err(_e) => continue,
