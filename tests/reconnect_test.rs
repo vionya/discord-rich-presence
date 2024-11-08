@@ -3,7 +3,7 @@ use std::error::Error;
 
 #[test]
 fn test_reconnect() -> Result<(), Box<dyn Error>> {
-    let mut client = DiscordIpcClient::new("771124766517755954")?;
+    let mut client = DiscordIpcClient::new(771124766517755954)?;
     loop {
         if client.connect().is_ok() {
             break;

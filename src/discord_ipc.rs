@@ -63,7 +63,7 @@ pub trait DiscordIpc {
     }
 
     #[doc(hidden)]
-    fn get_client_id(&self) -> &String;
+    fn get_client_id(&self) -> String;
 
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
@@ -179,9 +179,9 @@ pub trait DiscordIpc {
     }
 
     /// Works the same as as [`set_activity`] but clears activity instead.
-    /// 
+    ///
     /// [`set_activity`]: #method.set_activity
-    /// 
+    ///
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn clear_activity(&mut self) -> Result<()> {
@@ -193,7 +193,7 @@ pub trait DiscordIpc {
             },
             "nonce": Uuid::new_v4().to_string()
         });
-        
+
         self.send(data, 1)?;
 
         Ok(())

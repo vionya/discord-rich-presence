@@ -16,7 +16,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 /// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
 pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
-    pub client_id: String,
+    pub client_id: u64,
     connected: bool,
     socket: Option<File>,
 }
@@ -28,9 +28,9 @@ impl DiscordIpcClient {
     /// ```
     /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
     /// ```
-    pub fn new(client_id: &str) -> Result<Self> {
+    pub fn new(client_id: u64) -> Result<Self> {
         let client = Self {
-            client_id: client_id.to_string(),
+            client_id: client_id,
             connected: false,
             socket: None,
         };
@@ -91,7 +91,7 @@ impl DiscordIpc for DiscordIpcClient {
         Ok(())
     }
 
-    fn get_client_id(&self) -> &String {
-        &self.client_id
+    fn get_client_id(&self) -> String {
+        self.client_id.to_string()
     }
 }
