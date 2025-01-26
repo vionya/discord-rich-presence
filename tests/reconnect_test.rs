@@ -1,4 +1,4 @@
-use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use rpcdiscord::{activity, DiscordIpc, DiscordIpcClient};
 use std::error::Error;
 
 #[test]

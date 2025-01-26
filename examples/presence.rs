@@ -1,4 +1,4 @@
-use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use rpcdiscord::{activity, DiscordIpc, DiscordIpcClient};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = DiscordIpcClient::new(&std::env::args().collect::<Vec<String>>()[1])?;
