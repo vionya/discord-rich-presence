@@ -1,13 +1,13 @@
 //! Provides an interface for building activities to send
 //! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
-use serde_derive::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use serde_repr::Serialize_repr;
 
 /// A struct representing a Discord rich presence activity
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Activity<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     state: Option<&'a str>,
@@ -38,7 +38,7 @@ pub struct Activity<'a> {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Timestamps {
     #[serde(skip_serializing_if = "Option::is_none")]
     start: Option<i64>,
@@ -51,7 +51,7 @@ pub struct Timestamps {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Party<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<&'a str>,
@@ -65,7 +65,7 @@ pub struct Party<'a> {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Assets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     large_image: Option<&'a str>,
@@ -85,7 +85,7 @@ pub struct Assets<'a> {
 ///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Secrets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     join: Option<&'a str>,
@@ -101,14 +101,14 @@ pub struct Secrets<'a> {
 /// attached to an `Activity`
 ///
 /// An activity may have a maximum of 2 buttons
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Button<'a> {
     label: &'a str,
     url: &'a str,
 }
 
 /// A struct to set the Activity Type of the `Activity`
-#[derive(Serialize_repr, Clone)]
+#[derive(Serialize_repr, Deserialize, Clone)]
 #[repr(u8)]
 pub enum ActivityType {
     /// Activity type "Playing X"
