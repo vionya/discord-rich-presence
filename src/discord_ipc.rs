@@ -168,18 +168,39 @@ pub trait DiscordIpc {
         let data = json!({
             "cmd": cmd,
             "args": args,
-            "nonce": nonce,
+            "nonce": nonce.clone(),
         });
         self.send(data, 1)?;
-        let mut v = self.recv()?.1;
-        log::debug!("DRPC {}: {:?}", cmd, v);
+        let (opcode, value) = self.recv()?;
+        log::debug!("DRPC {}: {} {:?}", cmd, opcode, value);
 
-        // TODO: check nonce
+        let mut value_obj = value.as_object();
+        let temp_map = Map::new();
+        let mut v = value_obj.get_or_insert(&temp_map).clone();
 
-        v.as_object_mut()
-            .get_or_insert(&mut Map::new())
-            .remove("data")
-            .ok_or(Error::NoData)
+        let e = v.get("evt").unwrap();
+
+        if !e.is_null() {
+            // Event response
+            let e = e.as_str().unwrap();
+            if e == "ERROR" {
+                let mut d = v.remove("data").unwrap().as_object().unwrap().clone();
+                let code = d.remove("code").unwrap().as_u64().unwrap() as usize;
+                let message = d.remove("message").unwrap().as_str().unwrap().to_string();
+                return Err(Error::CommandError(code.into(), message));
+            }
+
+            todo!("check for other types of events")
+        } else {
+            // Command response
+            let nonce_val = v.remove("nonce").unwrap();
+            let returned_nonce = nonce_val.as_str().unwrap();
+            if nonce != returned_nonce {
+                return Err(Error::NonceCommandMismatch);
+            }
+
+            Ok(v.remove("data").unwrap())
+        }
     }
 
     /// Sets a Discord activity.
