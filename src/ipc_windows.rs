@@ -1,14 +1,13 @@
-use crate::discord_ipc::DiscordIpc;
+use crate::{discord_ipc::DiscordIpc, error::Error};
 use serde_json::json;
 use std::{
-    error::Error,
     fs::{File, OpenOptions},
     io::{Read, Write},
     os::windows::fs::OpenOptionsExt,
     path::PathBuf,
 };
 
-type Result<T> = std::result::Result<T, Box<dyn Error>>;
+type Result<T> = std::result::Result<T, Error>;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -17,7 +16,6 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub struct DiscordIpcClient {
     /// Client ID of the IPC client.
     pub client_id: String,
-    connected: bool,
     socket: Option<File>,
 }
 
@@ -26,16 +24,13 @@ impl DiscordIpcClient {
     ///
     /// # Examples
     /// ```
-    /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
+    /// let ipc_client = DiscordIpcClient::new("<some client id>");
     /// ```
-    pub fn new(client_id: &str) -> Result<Self> {
-        let client = Self {
+    pub fn new(client_id: &str) -> Self {
+        Self {
             client_id: client_id.to_string(),
-            connected: false,
             socket: None,
-        };
-
-        Ok(client)
+        }
     }
 }
 
@@ -53,27 +48,21 @@ impl DiscordIpc for DiscordIpcClient {
             }
         }
 
-        Err("Couldn't connect to the Discord IPC socket".into())
+        Err(Error::IPCConnectionFailed)
     }
 
     fn write(&mut self, data: &[u8]) -> Result<()> {
-        let socket = self.socket.as_mut().ok_or(std::io::Error::new(
-            std::io::ErrorKind::ConnectionRefused,
-            "Couldn't retrieve the Discord IPC socket",
-        ))?;
+        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
 
-        socket.write_all(data)?;
+        socket.write_all(data).map_err(Error::WriteError)?;
 
         Ok(())
     }
 
     fn read(&mut self, buffer: &mut [u8]) -> Result<()> {
-        let socket = self.socket.as_mut().ok_or(std::io::Error::new(
-            std::io::ErrorKind::ConnectionRefused,
-            "Couldn't retrieve the Discord IPC socket",
-        ))?;
+        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
 
-        socket.read_exact(buffer)?;
+        socket.read_exact(buffer).map_err(Error::ReadError)?;
 
         Ok(())
     }
@@ -82,11 +71,9 @@ impl DiscordIpc for DiscordIpcClient {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
-        let socket = self.socket.as_mut().ok_or(std::io::Error::new(
-            std::io::ErrorKind::ConnectionRefused,
-            "Couldn't retrieve the Discord IPC socket",
-        ))?;
-        socket.flush()?;
+        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
+
+        socket.flush().map_err(Error::FlushError)?;
 
         Ok(())
     }
