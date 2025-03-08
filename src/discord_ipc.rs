@@ -2,6 +2,7 @@ use crate::{
     activity::Activity,
     error::Error,
     pack_unpack::{pack, unpack},
+    voice_settings::VoiceSettings,
 };
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
@@ -254,6 +255,26 @@ pub trait DiscordIpc {
         } else {
             Ok(())
         }
+    }
+
+    /// Gets the current voice settings of the client.
+    ///
+    /// See [GET_VOICE_SETTINGS](https://discord.com/developers/docs/topics/rpc#getvoicesettings).
+    fn get_voice_settings(&mut self) -> Result<VoiceSettings> {
+        let args = json!({});
+        let d = self.command("GET_VOICE_SETTINGS", args)?;
+        Ok(serde_json::from_value(d).map_err(|_| Error::JsonParseResponse)?)
+    }
+
+    /// Sets the current voice settings of the client. Returns the current complete state of voice settings.
+    ///
+    /// Only one RPC client may control these settings at a time. No two clients may have the "rpc.voice.write" scope at once.
+    ///
+    /// See [SET_VOICE_SETTINGS](https://discord.com/developers/docs/topics/rpc#setvoicesettings).
+    fn set_voice_settings(&mut self, args: VoiceSettings) -> Result<VoiceSettings> {
+        let args = json!(args);
+        let d = self.command("SET_VOICE_SETTINGS", args)?;
+        Ok(serde_json::from_value(d).map_err(|_| Error::JsonParseResponse)?)
     }
 
     /// Closes the Discord IPC connection. Implementation is dependent on platform.

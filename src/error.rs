@@ -1,6 +1,8 @@
 //! Error types for this crate.
 use thiserror::Error;
 
+// TODO: add these error codes for the command method https://discord.com/developers/docs/topics/opcodes-and-status-codes#rpc
+
 /// Error type for this crate.
 #[derive(Error, Debug)]
 pub enum Error {
