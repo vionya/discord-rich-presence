@@ -1,104 +1,60 @@
 //! Provides an interface for building activities to send
 //! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
+
 use serde_derive::Serialize;
 use serde_repr::Serialize_repr;
 
 /// A struct representing a Discord rich presence activity
-///
-/// Note that all methods return `Self`, and can be chained
-/// for fluency
+#[serde_with::skip_serializing_none]
 #[derive(Serialize, Clone)]
 pub struct Activity<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
     state: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     details: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     timestamps: Option<Timestamps>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     party: Option<Party<'a>>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     assets: Option<Assets<'a>>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     secrets: Option<Secrets<'a>>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     buttons: Option<Vec<Button<'a>>>,
-
-    #[serde(skip_serializing_if = "Option::is_none", rename = "type")]
+    #[serde(rename = "type")]
     activity_type: Option<ActivityType>,
 }
 
 /// A struct representing an `Activity`'s timestamps
-///
-/// Note that all methods return `Self`, and can be chained
-/// for fluency
+#[serde_with::skip_serializing_none]
 #[derive(Serialize, Clone)]
 pub struct Timestamps {
-    #[serde(skip_serializing_if = "Option::is_none")]
     start: Option<i64>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     end: Option<i64>,
 }
 
 /// A struct representing an `Activity`'s game party
-///
-/// Note that all methods return `Self`, and can be chained
-/// for fluency
+#[serde_with::skip_serializing_none]
 #[derive(Serialize, Clone)]
 pub struct Party<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<[i32; 2]>,
 }
 
-/// A struct representing the art assets and hover text
-/// used by an `Activity`
-///
-/// Note that all methods return `Self`, and can be chained
-/// for fluency
+/// A struct representing the art assets and hover text used by an `Activity`
+#[serde_with::skip_serializing_none]
 #[derive(Serialize, Clone)]
 pub struct Assets<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
     large_image: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     large_text: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     small_image: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     small_text: Option<&'a str>,
 }
 
-/// A struct representing the secrets used by an
-/// `Activity`
-///
-/// Note that all methods return `Self`, and can be chained
-/// for fluency
+/// A struct representing the secrets used by an `Activity`
+#[serde_with::skip_serializing_none]
 #[derive(Serialize, Clone)]
 pub struct Secrets<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
     join: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     spectate: Option<&'a str>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     r#match: Option<&'a str>,
 }
 
-/// A struct representing the buttons that are
-/// attached to an `Activity`
+/// A struct representing the buttons that are attached to an `Activity`
 ///
 /// An activity may have a maximum of 2 buttons
 #[derive(Serialize, Clone)]
@@ -107,7 +63,7 @@ pub struct Button<'a> {
     url: &'a str,
 }
 
-/// A struct to set the Activity Type of the `Activity`
+/// An enum representing the Activity Type of the `Activity`
 #[derive(Serialize_repr, Clone)]
 #[repr(u8)]
 pub enum ActivityType {

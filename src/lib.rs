@@ -10,7 +10,7 @@
 //! use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let mut client = DiscordIpcClient::new("<some client id>")?;
+//!     let mut client = DiscordIpcClient::new("<some client id>");
 //!     client.connect()?;
 //!
 //!     let payload = activity::Activity::new().state("Hello world!");
@@ -22,7 +22,11 @@
 mod discord_ipc;
 mod pack_unpack;
 pub use discord_ipc::*;
-pub mod activity;
+mod types {
+    pub mod activity;
+    pub mod voice_settings;
+}
+pub use types::*;
 pub mod error;
 
 #[cfg(unix)]
