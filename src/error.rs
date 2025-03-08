@@ -34,4 +34,15 @@ pub enum Error {
     /// Failed to flush IPC socket.
     #[error("failed to flush IPC socket")]
     FlushError(std::io::Error),
+
+    /// Failed to find data in response.
+    #[error("failed to find data in response")]
+    NoData,
+
+    /// Failed to find authorization code in response.
+    #[error("failed to find authorization code in response")]
+    NoAuthorizationCode,
+    /// Authentication failed.
+    #[error("authentication failed")]
+    AuthenticationFailed,
 }

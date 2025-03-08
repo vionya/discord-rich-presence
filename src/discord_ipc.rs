@@ -3,7 +3,7 @@ use crate::{
     error::Error,
     pack_unpack::{pack, unpack},
 };
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, Error>;
@@ -156,6 +156,31 @@ pub trait DiscordIpc {
     #[doc(hidden)]
     fn read(&mut self, buffer: &mut [u8]) -> Result<()>;
 
+    /// Sends a command to the Discord IPC.
+    ///
+    /// This sends a command to Discord, as described
+    /// [here](https://discord.com/developers/docs/topics/rpc#commands-and-events).
+    ///
+    /// The return value is the "data" field from the response payload.
+    fn command(&mut self, cmd: &str, args: Value) -> Result<Value> {
+        let nonce = Uuid::new_v4().to_string();
+        let data = json!({
+            "cmd": cmd,
+            "args": args,
+            "nonce": nonce,
+        });
+        self.send(data, 1)?;
+        let mut v = self.recv()?.1;
+        log::debug!("DRPC {}: {:?}", cmd, v);
+
+        // TODO: check nonce
+
+        v.as_object_mut()
+            .get_or_insert(&mut Map::new())
+            .remove("data")
+            .ok_or(Error::NoData)
+    }
+
     /// Sets a Discord activity.
     ///
     /// This method is an abstraction of [`send`],
@@ -167,15 +192,13 @@ pub trait DiscordIpc {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn set_activity(&mut self, activity_payload: Activity) -> Result<()> {
-        let data = json!({
-            "cmd": "SET_ACTIVITY",
-            "args": {
+        self.command(
+            "SET_ACTIVITY",
+            json!({
                 "pid": std::process::id(),
                 "activity": activity_payload
-            },
-            "nonce": Uuid::new_v4().to_string()
-        });
-        self.send(data, 1)?;
+            }),
+        )?;
 
         Ok(())
     }
@@ -187,18 +210,50 @@ pub trait DiscordIpc {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn clear_activity(&mut self) -> Result<()> {
-        let data = json!({
-            "cmd": "SET_ACTIVITY",
-            "args": {
+        self.command(
+            "SET_ACTIVITY",
+            json!({
                 "pid": std::process::id(),
                 "activity": None::<()>
-            },
-            "nonce": Uuid::new_v4().to_string()
-        });
-
-        self.send(data, 1)?;
+            }),
+        )?;
 
         Ok(())
+    }
+
+    /// Used to authorize the client, popping up a modal in-app for user authorization.
+    ///
+    /// Scopes must be from [this list](https://discord.com/developers/docs/topics/oauth2#shared-resources-oauth2-scopes).
+    /// Returned value is an OAuth2 authorization code which can be used for an access token.
+    ///
+    /// Authorization and authentication is necessary for all scopes except setting activities.
+    ///
+    /// See [AUTHORIZE](https://discord.com/developers/docs/topics/rpc#authorize).
+    fn authorize(&mut self, scopes: &[&str]) -> Result<String> {
+        let args = json!({
+            "client_id": self.get_client_id(),
+            "scopes": scopes
+        });
+        let v = self.command("AUTHORIZE", args)?;
+
+        Ok(v.get("code")
+            .and_then(|c| c.as_str())
+            .ok_or(Error::NoAuthorizationCode)?
+            .to_string())
+    }
+
+    /// Used to authenticate the client. Access token is given by the standard OAuth2 token process.
+    ///
+    /// See [AUTHENTICATE](https://discord.com/developers/docs/topics/rpc#authenticate).
+    fn authenticate(&mut self, access_token: &str) -> Result<()> {
+        let args = json!({ "access_token": access_token });
+        let v = self.command("AUTHENTICATE", args)?;
+
+        if v.as_object().unwrap().contains_key("code") {
+            Err(Error::AuthenticationFailed)
+        } else {
+            Ok(())
+        }
     }
 
     /// Closes the Discord IPC connection. Implementation is dependent on platform.
