@@ -2,8 +2,9 @@ use crate::{
     activity::Activity,
     error::Error,
     pack_unpack::{pack, unpack},
+    voice_settings::VoiceSettings,
 };
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, Error>;
@@ -156,6 +157,52 @@ pub trait DiscordIpc {
     #[doc(hidden)]
     fn read(&mut self, buffer: &mut [u8]) -> Result<()>;
 
+    /// Sends a command to the Discord IPC.
+    ///
+    /// This sends a command to Discord, as described
+    /// [here](https://discord.com/developers/docs/topics/rpc#commands-and-events).
+    ///
+    /// The return value is the "data" field from the response payload.
+    fn command(&mut self, cmd: &str, args: Value) -> Result<Value> {
+        let nonce = Uuid::new_v4().to_string();
+        let data = json!({
+            "cmd": cmd,
+            "args": args,
+            "nonce": nonce.clone(),
+        });
+        self.send(data, 1)?;
+        let (opcode, value) = self.recv()?;
+        log::debug!("DRPC {}: {} {:?}", cmd, opcode, value);
+
+        let mut value_obj = value.as_object();
+        let temp_map = Map::new();
+        let mut v = value_obj.get_or_insert(&temp_map).clone();
+
+        let e = v.get("evt").unwrap();
+
+        if !e.is_null() {
+            // Event response
+            let e = e.as_str().unwrap();
+            if e == "ERROR" {
+                let mut d = v.remove("data").unwrap().as_object().unwrap().clone();
+                let code = d.remove("code").unwrap().as_u64().unwrap() as usize;
+                let message = d.remove("message").unwrap().as_str().unwrap().to_string();
+                return Err(Error::CommandError(code.into(), message));
+            }
+
+            todo!("check for other types of events")
+        } else {
+            // Command response
+            let nonce_val = v.remove("nonce").unwrap();
+            let returned_nonce = nonce_val.as_str().unwrap();
+            if nonce != returned_nonce {
+                return Err(Error::NonceCommandMismatch);
+            }
+
+            Ok(v.remove("data").unwrap())
+        }
+    }
+
     /// Sets a Discord activity.
     ///
     /// This method is an abstraction of [`send`],
@@ -167,15 +214,13 @@ pub trait DiscordIpc {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn set_activity(&mut self, activity_payload: Activity) -> Result<()> {
-        let data = json!({
-            "cmd": "SET_ACTIVITY",
-            "args": {
+        self.command(
+            "SET_ACTIVITY",
+            json!({
                 "pid": std::process::id(),
                 "activity": activity_payload
-            },
-            "nonce": Uuid::new_v4().to_string()
-        });
-        self.send(data, 1)?;
+            }),
+        )?;
 
         Ok(())
     }
@@ -187,18 +232,70 @@ pub trait DiscordIpc {
     /// # Errors
     /// Returns an `Err` variant if sending the payload failed.
     fn clear_activity(&mut self) -> Result<()> {
-        let data = json!({
-            "cmd": "SET_ACTIVITY",
-            "args": {
+        self.command(
+            "SET_ACTIVITY",
+            json!({
                 "pid": std::process::id(),
                 "activity": None::<()>
-            },
-            "nonce": Uuid::new_v4().to_string()
-        });
-
-        self.send(data, 1)?;
+            }),
+        )?;
 
         Ok(())
+    }
+
+    /// Used to authorize the client, popping up a modal in-app for user authorization.
+    ///
+    /// Scopes must be from [this list](https://discord.com/developers/docs/topics/oauth2#shared-resources-oauth2-scopes).
+    /// Returned value is an OAuth2 authorization code which can be used for an access token.
+    ///
+    /// Authorization and authentication is necessary for all scopes except setting activities.
+    ///
+    /// See [AUTHORIZE](https://discord.com/developers/docs/topics/rpc#authorize).
+    fn authorize(&mut self, scopes: &[&str]) -> Result<String> {
+        let args = json!({
+            "client_id": self.get_client_id(),
+            "scopes": scopes
+        });
+        let v = self.command("AUTHORIZE", args)?;
+
+        Ok(v.get("code")
+            .and_then(|c| c.as_str())
+            .ok_or(Error::NoAuthorizationCode)?
+            .to_string())
+    }
+
+    /// Used to authenticate the client. Access token is given by the standard OAuth2 token process.
+    ///
+    /// See [AUTHENTICATE](https://discord.com/developers/docs/topics/rpc#authenticate).
+    fn authenticate(&mut self, access_token: &str) -> Result<()> {
+        let args = json!({ "access_token": access_token });
+        let v = self.command("AUTHENTICATE", args)?;
+
+        if v.as_object().unwrap().contains_key("code") {
+            Err(Error::AuthenticationFailed)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Gets the current voice settings of the client.
+    ///
+    /// See [GET_VOICE_SETTINGS](https://discord.com/developers/docs/topics/rpc#getvoicesettings).
+    fn get_voice_settings(&mut self) -> Result<VoiceSettings> {
+        let args = json!({});
+        let d = self.command("GET_VOICE_SETTINGS", args)?;
+        Ok(serde_json::from_value(d).map_err(|_| Error::JsonParseResponse)?)
+    }
+
+    /// Sets the current voice settings of the client. Returns the current complete state of voice settings.
+    ///
+    /// Only one RPC client may control these settings at a time. No two clients may have the "rpc.voice.write" scope at once.
+    ///
+    /// See [SET_VOICE_SETTINGS](https://discord.com/developers/docs/topics/rpc#setvoicesettings).
+    fn set_voice_settings(&mut self, args: VoiceSettings) -> Result<VoiceSettings> {
+        let args = json!(args);
+        let d = self.command("SET_VOICE_SETTINGS", args)?;
+        Ok(serde_json::from_value(d).map_err(|_| Error::JsonParseResponse)?)
     }
 
     /// Closes the Discord IPC connection. Implementation is dependent on platform.
