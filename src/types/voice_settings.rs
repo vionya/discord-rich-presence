@@ -116,8 +116,8 @@ impl VoiceInputSettings {
     }
 
     /// Sets the input device by its ID.
-    pub fn device_id(mut self, device_id: String) -> Self {
-        self.device_id = Some(device_id);
+    pub fn device_id(mut self, device_id: impl ToString) -> Self {
+        self.device_id = Some(device_id.to_string());
         self
     }
 
@@ -146,8 +146,8 @@ impl VoiceOutputSettings {
     }
 
     /// Sets the input device by its ID.
-    pub fn device_id(mut self, device_id: String) -> Self {
-        self.device_id = Some(device_id);
+    pub fn device_id(mut self, device_id: impl ToString) -> Self {
+        self.device_id = Some(device_id.to_string());
         self
     }
 
@@ -239,11 +239,11 @@ pub struct ShortcutKeyCombo {
 }
 impl ShortcutKeyCombo {
     /// Creates a new `ShortcutKeyCombo`.
-    pub fn new(key_type: ShortcutKeyType, code: usize, name: String) -> Self {
+    pub fn new(key_type: ShortcutKeyType, code: usize, name: impl ToString) -> Self {
         Self {
             key_type: key_type,
             code: code,
-            name: name,
+            name: name.to_string(),
         }
     }
 }
