@@ -13,7 +13,13 @@ pub struct Activity<'a> {
     state: Option<&'a str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    state_url: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     details: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    details_url: Option<&'a str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     timestamps: Option<Timestamps>,
@@ -32,6 +38,9 @@ pub struct Activity<'a> {
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "type")]
     activity_type: Option<ActivityType>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    status_display_type: Option<StatusDisplayType>,
 }
 
 /// A struct representing an `Activity`'s timestamps
@@ -121,18 +130,34 @@ pub enum ActivityType {
     Competing = 5,
 }
 
+/// A struct to set the Status Display Type of the `Activity`
+/// Controls which field is displayed in the user's status text in the member list
+#[derive(Serialize_repr, Clone)]
+#[repr(u8)]
+pub enum StatusDisplayType {
+    /// "Listening to Spotify"
+    Name = 0,
+    /// "Listening to Rick Astley"
+    State = 1,
+    /// "Listening to Never Gonna Give You Up"
+    Details = 2
+}
+
 impl<'a> Activity<'a> {
     /// Creates a new `Activity`
     pub fn new() -> Self {
         Activity {
             state: None,
+            state_url: None,
             details: None,
+            details_url: None,
             assets: None,
             buttons: None,
             party: None,
             secrets: None,
             timestamps: None,
             activity_type: None,
+            status_display_type: None,
         }
     }
 
@@ -142,9 +167,21 @@ impl<'a> Activity<'a> {
         self
     }
 
+    /// Sets the state URL of the activity
+    pub fn state_url(mut self, state_url: &'a str) -> Self {
+        self.state_url = Some(state_url);
+        self
+    }
+
     /// Sets the details of the activity
     pub fn details(mut self, details: &'a str) -> Self {
         self.details = Some(details);
+        self
+    }
+
+    /// Sets the details URL of the activity
+    pub fn details_url(mut self, details_url: &'a str) -> Self {
+        self.details_url = Some(details_url);
         self
     }
 
@@ -189,6 +226,12 @@ impl<'a> Activity<'a> {
     /// Add an `ActivityType` to this activity
     pub fn activity_type(mut self, activity_type: ActivityType) -> Self {
         self.activity_type = Some(activity_type);
+        self
+    }
+
+    /// Add a `StatusDisplayType` to this activity
+    pub fn status_display_type(mut self, status_display_type: StatusDisplayType) -> Self {
+        self.status_display_type = Some(status_display_type);
         self
     }
 }
