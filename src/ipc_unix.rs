@@ -11,9 +11,12 @@ use std::{
 // Environment keys to search for the Discord pipe
 const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 
-const APP_SUBPATHS: [&str; 4] = [
+const APP_SUBPATHS: [&str; 7] = [
     "",
     "app/com.discordapp.Discord/",
+    "app/dev.vencord.Vesktop/",
+    ".flatpak/com.discordapp.Discord/xdg-run/",
+    ".flatpak/dev.vencord.Vesktop/xdg-run/",
     "snap.discord-canary/",
     "snap.discord/",
 ];
