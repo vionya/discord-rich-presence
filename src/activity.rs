@@ -89,10 +89,16 @@ pub struct Assets<'a> {
     large_text: Option<&'a str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    large_url: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     small_image: Option<&'a str>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     small_text: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    small_url: Option<&'a str>,
 }
 
 /// A struct representing the secrets used by an
@@ -317,8 +323,10 @@ impl<'a> Assets<'a> {
         Assets {
             large_image: None,
             large_text: None,
+            large_url: None,
             small_image: None,
             small_text: None,
+            small_url: None,
         }
     }
 
@@ -335,6 +343,12 @@ impl<'a> Assets<'a> {
         self
     }
 
+    /// Sets the url to be shown when clicking the large image
+    pub fn large_url(mut self, large_url: &'a str) -> Self {
+        self.large_url = Some(large_url);
+        self
+    }
+
     /// Sets the asset name or URL to be used as the small image
     pub fn small_image(mut self, small_image: &'a str) -> Self {
         self.small_image = Some(small_image);
@@ -345,6 +359,12 @@ impl<'a> Assets<'a> {
     /// image
     pub fn small_text(mut self, small_text: &'a str) -> Self {
         self.small_text = Some(small_text);
+        self
+    }
+
+    /// Sets the url to be shown when clicking the small image
+    pub fn small_url(mut self, small_url: &'a str) -> Self {
+        self.small_url = Some(small_url);
         self
     }
 }
