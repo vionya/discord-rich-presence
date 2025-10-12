@@ -45,13 +45,19 @@ pub struct Activity<'a> {
 
 /// A struct representing an `Activity`'s timestamps
 ///
+/// For `ActivityType::Listening` and `ActivityType::Watching`,
+/// including both `start` and `end` timestamps will display
+/// a time bar
+///
 /// Note that all methods return `Self`, and can be chained
 /// for fluency
 #[derive(Serialize, Clone)]
 pub struct Timestamps {
+    /// Unix time (in milliseconds) of when the activity started
     #[serde(skip_serializing_if = "Option::is_none")]
     start: Option<i64>,
 
+    /// Unix time (in milliseconds) of when the activity ends
     #[serde(skip_serializing_if = "Option::is_none")]
     end: Option<i64>,
 }
@@ -316,11 +322,7 @@ impl<'a> Assets<'a> {
         }
     }
 
-    /// Sets the name of the art asset to be used as the large
-    /// image
-    ///
-    /// Alternatively, the URL of the resource to be used as
-    /// the large image
+    /// Sets the asset name or URL to be used as the large image
     pub fn large_image(mut self, large_image: &'a str) -> Self {
         self.large_image = Some(large_image);
         self
@@ -333,11 +335,7 @@ impl<'a> Assets<'a> {
         self
     }
 
-    /// Sets the name of the art asset to be used as the small
-    /// image
-    ///
-    /// Alternatively, the URL of the resource to be used as
-    /// the small image
+    /// Sets the asset name or URL to be used as the small image
     pub fn small_image(mut self, small_image: &'a str) -> Self {
         self.small_image = Some(small_image);
         self
