@@ -12,7 +12,11 @@ fn test_models() -> Result<(), Box<dyn Error>> {
         .assets(
             activity::Assets::new()
                 .large_image("large-image")
-                .large_text("Large text"),
+                .large_text("Large text")
+                .large_url("https://example.com")
+                .small_image("https://picsum.photos/id/128/200")
+                .small_text("Small image")
+                .small_url("https://picsum.photos/id/128/200")
         )
         .buttons(vec![activity::Button::new(
             "A button",
