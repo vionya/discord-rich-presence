@@ -152,7 +152,7 @@ pub enum StatusDisplayType {
     /// "Listening to Rick Astley"
     State = 1,
     /// "Listening to Never Gonna Give You Up"
-    Details = 2
+    Details = 2,
 }
 
 impl<'a> Activity<'a> {
