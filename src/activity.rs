@@ -418,7 +418,7 @@ impl<'a> Button<'a> {
     /// The label must be 1-32 characters long
     ///
     /// The URL must be 1-512 characters long
-    pub fn new<S: Into<Cow<'a, str>>>(label: S, url: S) -> Self {
+    pub fn new<L: Into<Cow<'a, str>>, U: Into<Cow<'a, str>>>(label: L, url: U) -> Self {
         Button {
             label: label.into(),
             url: url.into(),
