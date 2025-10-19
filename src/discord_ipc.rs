@@ -63,7 +63,7 @@ pub trait DiscordIpc {
     }
 
     #[doc(hidden)]
-    fn get_client_id(&self) -> &String;
+    fn get_client_id(&self) -> &str;
 
     #[doc(hidden)]
     fn connect_ipc(&mut self) -> Result<()>;
