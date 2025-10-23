@@ -26,9 +26,9 @@ impl DiscordIpcClient {
     /// ```
     /// let ipc_client = DiscordIpcClient::new("<some client id>");
     /// ```
-    pub fn new(client_id: &str) -> Self {
+    pub fn new<T: AsRef<str>>(client_id: T) -> Self {
         Self {
-            client_id: client_id.to_string(),
+            client_id: client_id.as_ref().to_string(),
             socket: None,
         }
     }
@@ -78,7 +78,7 @@ impl DiscordIpc for DiscordIpcClient {
         Ok(())
     }
 
-    fn get_client_id(&self) -> &String {
+    fn get_client_id(&self) -> &str {
         &self.client_id
     }
 }

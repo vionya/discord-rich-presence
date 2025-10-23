@@ -2,6 +2,7 @@
 //! to Discord via [`DiscordIpc::set_activity`](crate::DiscordIpc::set_activity).
 use serde_derive::Serialize;
 use serde_repr::Serialize_repr;
+use std::borrow::Cow;
 
 /// A struct representing a Discord rich presence activity
 ///
@@ -10,16 +11,16 @@ use serde_repr::Serialize_repr;
 #[derive(Serialize, Clone)]
 pub struct Activity<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    state: Option<&'a str>,
+    state: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    state_url: Option<&'a str>,
+    state_url: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    details: Option<&'a str>,
+    details: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    details_url: Option<&'a str>,
+    details_url: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     timestamps: Option<Timestamps>,
@@ -69,7 +70,7 @@ pub struct Timestamps {
 #[derive(Serialize, Clone)]
 pub struct Party<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    id: Option<&'a str>,
+    id: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<[i32; 2]>,
@@ -83,22 +84,22 @@ pub struct Party<'a> {
 #[derive(Serialize, Clone)]
 pub struct Assets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    large_image: Option<&'a str>,
+    large_image: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    large_text: Option<&'a str>,
+    large_text: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    large_url: Option<&'a str>,
+    large_url: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    small_image: Option<&'a str>,
+    small_image: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    small_text: Option<&'a str>,
+    small_text: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    small_url: Option<&'a str>,
+    small_url: Option<Cow<'a, str>>,
 }
 
 /// A struct representing the secrets used by an
@@ -109,13 +110,13 @@ pub struct Assets<'a> {
 #[derive(Serialize, Clone)]
 pub struct Secrets<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    join: Option<&'a str>,
+    join: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    spectate: Option<&'a str>,
+    spectate: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    r#match: Option<&'a str>,
+    r#match: Option<Cow<'a, str>>,
 }
 
 /// A struct representing the buttons that are
@@ -124,8 +125,8 @@ pub struct Secrets<'a> {
 /// An activity may have a maximum of 2 buttons
 #[derive(Serialize, Clone)]
 pub struct Button<'a> {
-    label: &'a str,
-    url: &'a str,
+    label: Cow<'a, str>,
+    url: Cow<'a, str>,
 }
 
 /// A struct to set the Activity Type of the `Activity`
@@ -152,7 +153,7 @@ pub enum StatusDisplayType {
     /// "Listening to Rick Astley"
     State = 1,
     /// "Listening to Never Gonna Give You Up"
-    Details = 2
+    Details = 2,
 }
 
 impl<'a> Activity<'a> {
@@ -174,26 +175,26 @@ impl<'a> Activity<'a> {
     }
 
     /// Sets the state of the activity
-    pub fn state(mut self, state: &'a str) -> Self {
-        self.state = Some(state);
+    pub fn state<S: Into<Cow<'a, str>>>(mut self, state: S) -> Self {
+        self.state = Some(state.into());
         self
     }
 
     /// Sets the state URL of the activity
-    pub fn state_url(mut self, state_url: &'a str) -> Self {
-        self.state_url = Some(state_url);
+    pub fn state_url<S: Into<Cow<'a, str>>>(mut self, state_url: S) -> Self {
+        self.state_url = Some(state_url.into());
         self
     }
 
     /// Sets the details of the activity
-    pub fn details(mut self, details: &'a str) -> Self {
-        self.details = Some(details);
+    pub fn details<S: Into<Cow<'a, str>>>(mut self, details: S) -> Self {
+        self.details = Some(details.into());
         self
     }
 
     /// Sets the details URL of the activity
-    pub fn details_url(mut self, details_url: &'a str) -> Self {
-        self.details_url = Some(details_url);
+    pub fn details_url<S: Into<Cow<'a, str>>>(mut self, details_url: S) -> Self {
+        self.details_url = Some(details_url.into());
         self
     }
 
@@ -292,8 +293,8 @@ impl<'a> Party<'a> {
     }
 
     /// Sets the ID of the party
-    pub fn id(mut self, id: &'a str) -> Self {
-        self.id = Some(id);
+    pub fn id<S: Into<Cow<'a, str>>>(mut self, id: S) -> Self {
+        self.id = Some(id.into());
         self
     }
 
@@ -331,40 +332,40 @@ impl<'a> Assets<'a> {
     }
 
     /// Sets the asset name or URL to be used as the large image
-    pub fn large_image(mut self, large_image: &'a str) -> Self {
-        self.large_image = Some(large_image);
+    pub fn large_image<S: Into<Cow<'a, str>>>(mut self, large_image: S) -> Self {
+        self.large_image = Some(large_image.into());
         self
     }
 
     /// Sets the text to be shown when hovering over the large
     /// image
-    pub fn large_text(mut self, large_text: &'a str) -> Self {
-        self.large_text = Some(large_text);
+    pub fn large_text<S: Into<Cow<'a, str>>>(mut self, large_text: S) -> Self {
+        self.large_text = Some(large_text.into());
         self
     }
 
     /// Sets the url to be shown when clicking the large image
-    pub fn large_url(mut self, large_url: &'a str) -> Self {
-        self.large_url = Some(large_url);
+    pub fn large_url<S: Into<Cow<'a, str>>>(mut self, large_url: S) -> Self {
+        self.large_url = Some(large_url.into());
         self
     }
 
     /// Sets the asset name or URL to be used as the small image
-    pub fn small_image(mut self, small_image: &'a str) -> Self {
-        self.small_image = Some(small_image);
+    pub fn small_image<S: Into<Cow<'a, str>>>(mut self, small_image: S) -> Self {
+        self.small_image = Some(small_image.into());
         self
     }
 
     /// Sets the text that is shown when hovering over the small
     /// image
-    pub fn small_text(mut self, small_text: &'a str) -> Self {
-        self.small_text = Some(small_text);
+    pub fn small_text<S: Into<Cow<'a, str>>>(mut self, small_text: S) -> Self {
+        self.small_text = Some(small_text.into());
         self
     }
 
     /// Sets the url to be shown when clicking the small image
-    pub fn small_url(mut self, small_url: &'a str) -> Self {
-        self.small_url = Some(small_url);
+    pub fn small_url<S: Into<Cow<'a, str>>>(mut self, small_url: S) -> Self {
+        self.small_url = Some(small_url.into());
         self
     }
 }
@@ -386,20 +387,20 @@ impl<'a> Secrets<'a> {
     }
 
     /// Sets the secret for joining a game party
-    pub fn join(mut self, join: &'a str) -> Self {
-        self.join = Some(join);
+    pub fn join<S: Into<Cow<'a, str>>>(mut self, join: S) -> Self {
+        self.join = Some(join.into());
         self
     }
 
     /// Sets the secret for spectating a match
-    pub fn spectate(mut self, spectate: &'a str) -> Self {
-        self.spectate = Some(spectate);
+    pub fn spectate<S: Into<Cow<'a, str>>>(mut self, spectate: S) -> Self {
+        self.spectate = Some(spectate.into());
         self
     }
 
     /// Sets the secret for a specific, instanced match
-    pub fn r#match(mut self, r#match: &'a str) -> Self {
-        self.r#match = Some(r#match);
+    pub fn r#match<S: Into<Cow<'a, str>>>(mut self, r#match: S) -> Self {
+        self.r#match = Some(r#match.into());
         self
     }
 }
@@ -417,7 +418,10 @@ impl<'a> Button<'a> {
     /// The label must be 1-32 characters long
     ///
     /// The URL must be 1-512 characters long
-    pub fn new(label: &'a str, url: &'a str) -> Self {
-        Button { label, url }
+    pub fn new<L: Into<Cow<'a, str>>, U: Into<Cow<'a, str>>>(label: L, url: U) -> Self {
+        Button {
+            label: label.into(),
+            url: url.into(),
+        }
     }
 }
