@@ -11,6 +11,9 @@ use std::borrow::Cow;
 #[derive(Serialize, Clone)]
 pub struct Activity<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<Cow<'a, str>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     state: Option<Cow<'a, str>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -160,6 +163,7 @@ impl<'a> Activity<'a> {
     /// Creates a new `Activity`
     pub fn new() -> Self {
         Activity {
+            name: None,
             state: None,
             state_url: None,
             details: None,
@@ -172,6 +176,12 @@ impl<'a> Activity<'a> {
             activity_type: None,
             status_display_type: None,
         }
+    }
+
+    /// Sets the name of the activity (overrides default App name)
+    pub fn name<S: Into<Cow<'a, str>>>(mut self, name: S) -> Self {
+        self.name = Some(name.into());
+        self
     }
 
     /// Sets the state of the activity
