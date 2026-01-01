@@ -18,6 +18,9 @@ pub enum Error {
     #[error("failed to parse response json")]
     JsonParseResponse,
 
+    /// Failed to find IPC socket.
+    #[error("failed to find IPC socket")]
+    IPCNotFound,
     /// Failed to connect to IPC socket.
     #[error("failed to connect to IPC socket")]
     IPCConnectionFailed,
