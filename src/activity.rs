@@ -161,7 +161,8 @@ pub enum StatusDisplayType {
 
 impl<'a> Activity<'a> {
     /// Creates a new `Activity`
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Activity {
             name: None,
             state: None,
@@ -179,54 +180,63 @@ impl<'a> Activity<'a> {
     }
 
     /// Sets the name of the activity (overrides default App name)
+    #[must_use]
     pub fn name<S: Into<Cow<'a, str>>>(mut self, name: S) -> Self {
         self.name = Some(name.into());
         self
     }
 
     /// Sets the state of the activity
+    #[must_use]
     pub fn state<S: Into<Cow<'a, str>>>(mut self, state: S) -> Self {
         self.state = Some(state.into());
         self
     }
 
     /// Sets the state URL of the activity
+    #[must_use]
     pub fn state_url<S: Into<Cow<'a, str>>>(mut self, state_url: S) -> Self {
         self.state_url = Some(state_url.into());
         self
     }
 
     /// Sets the details of the activity
+    #[must_use]
     pub fn details<S: Into<Cow<'a, str>>>(mut self, details: S) -> Self {
         self.details = Some(details.into());
         self
     }
 
     /// Sets the details URL of the activity
+    #[must_use]
     pub fn details_url<S: Into<Cow<'a, str>>>(mut self, details_url: S) -> Self {
         self.details_url = Some(details_url.into());
         self
     }
 
     /// Add a `Timestamps` to this activity
-    pub fn timestamps(mut self, timestamps: Timestamps) -> Self {
+    #[must_use]
+    pub const fn timestamps(mut self, timestamps: Timestamps) -> Self {
         self.timestamps = Some(timestamps);
         self
     }
 
     /// Add a `Party` to this activity
+    #[must_use]
     pub fn party(mut self, party: Party<'a>) -> Self {
         self.party = Some(party);
         self
     }
 
     /// Add an `Assets` to this activity
+    #[must_use]
     pub fn assets(mut self, assets: Assets<'a>) -> Self {
         self.assets = Some(assets);
         self
     }
 
     /// Add a `Secrets` to this activity
+    #[must_use]
     pub fn secrets(mut self, secrets: Secrets<'a>) -> Self {
         self.secrets = Some(secrets);
         self
@@ -235,6 +245,7 @@ impl<'a> Activity<'a> {
     /// Add a `Vec` of `Button`s to this activity
     ///
     /// An activity may contain no more than 2 buttons
+    #[must_use]
     pub fn buttons(mut self, buttons: Vec<Button<'a>>) -> Self {
         // API call fails if the array is empty, so we skip serialization
         // entirely if this is the case
@@ -247,19 +258,21 @@ impl<'a> Activity<'a> {
     }
 
     /// Add an `ActivityType` to this activity
-    pub fn activity_type(mut self, activity_type: ActivityType) -> Self {
+    #[must_use]
+    pub const fn activity_type(mut self, activity_type: ActivityType) -> Self {
         self.activity_type = Some(activity_type);
         self
     }
 
     /// Add a `StatusDisplayType` to this activity
-    pub fn status_display_type(mut self, status_display_type: StatusDisplayType) -> Self {
+    #[must_use]
+    pub const fn status_display_type(mut self, status_display_type: StatusDisplayType) -> Self {
         self.status_display_type = Some(status_display_type);
         self
     }
 }
 
-impl<'a> Default for Activity<'a> {
+impl Default for Activity<'_> {
     fn default() -> Self {
         Self::new()
     }
@@ -267,21 +280,24 @@ impl<'a> Default for Activity<'a> {
 
 impl Timestamps {
     /// Creates a new `Timestamps`
-    pub fn new() -> Self {
-        Timestamps {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
             start: None,
             end: None,
         }
     }
 
     /// Sets the start time
-    pub fn start(mut self, start: i64) -> Self {
+    #[must_use]
+    pub const fn start(mut self, start: i64) -> Self {
         self.start = Some(start);
         self
     }
 
     /// Sets the end time
-    pub fn end(mut self, end: i64) -> Self {
+    #[must_use]
+    pub const fn end(mut self, end: i64) -> Self {
         self.end = Some(end);
         self
     }
@@ -295,14 +311,16 @@ impl Default for Timestamps {
 
 impl<'a> Party<'a> {
     /// Creates a new `Party`
-    pub fn new() -> Self {
-        Party {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
             id: None,
             size: None,
         }
     }
 
     /// Sets the ID of the party
+    #[must_use]
     pub fn id<S: Into<Cow<'a, str>>>(mut self, id: S) -> Self {
         self.id = Some(id.into());
         self
@@ -316,13 +334,14 @@ impl<'a> Party<'a> {
     /// // of 1, and a max size of 3
     /// let party = Party::new().size([1, 3])
     /// ```
-    pub fn size(mut self, size: [i32; 2]) -> Self {
+    #[must_use]
+    pub const fn size(mut self, size: [i32; 2]) -> Self {
         self.size = Some(size);
         self
     }
 }
 
-impl<'a> Default for Party<'a> {
+impl Default for Party<'_> {
     fn default() -> Self {
         Self::new()
     }
@@ -330,8 +349,9 @@ impl<'a> Default for Party<'a> {
 
 impl<'a> Assets<'a> {
     /// Creates a new `Assets`
-    pub fn new() -> Self {
-        Assets {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
             large_image: None,
             large_text: None,
             large_url: None,
@@ -342,6 +362,7 @@ impl<'a> Assets<'a> {
     }
 
     /// Sets the asset name or URL to be used as the large image
+    #[must_use]
     pub fn large_image<S: Into<Cow<'a, str>>>(mut self, large_image: S) -> Self {
         self.large_image = Some(large_image.into());
         self
@@ -349,18 +370,21 @@ impl<'a> Assets<'a> {
 
     /// Sets the text to be shown when hovering over the large
     /// image
+    #[must_use]
     pub fn large_text<S: Into<Cow<'a, str>>>(mut self, large_text: S) -> Self {
         self.large_text = Some(large_text.into());
         self
     }
 
     /// Sets the url to be shown when clicking the large image
+    #[must_use]
     pub fn large_url<S: Into<Cow<'a, str>>>(mut self, large_url: S) -> Self {
         self.large_url = Some(large_url.into());
         self
     }
 
     /// Sets the asset name or URL to be used as the small image
+    #[must_use]
     pub fn small_image<S: Into<Cow<'a, str>>>(mut self, small_image: S) -> Self {
         self.small_image = Some(small_image.into());
         self
@@ -368,19 +392,21 @@ impl<'a> Assets<'a> {
 
     /// Sets the text that is shown when hovering over the small
     /// image
+    #[must_use]
     pub fn small_text<S: Into<Cow<'a, str>>>(mut self, small_text: S) -> Self {
         self.small_text = Some(small_text.into());
         self
     }
 
     /// Sets the url to be shown when clicking the small image
+    #[must_use]
     pub fn small_url<S: Into<Cow<'a, str>>>(mut self, small_url: S) -> Self {
         self.small_url = Some(small_url.into());
         self
     }
 }
 
-impl<'a> Default for Assets<'a> {
+impl Default for Assets<'_> {
     fn default() -> Self {
         Self::new()
     }
@@ -388,8 +414,9 @@ impl<'a> Default for Assets<'a> {
 
 impl<'a> Secrets<'a> {
     /// Creates a new `Secrets`
-    pub fn new() -> Self {
-        Secrets {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
             join: None,
             spectate: None,
             r#match: None,
@@ -397,25 +424,28 @@ impl<'a> Secrets<'a> {
     }
 
     /// Sets the secret for joining a game party
+    #[must_use]
     pub fn join<S: Into<Cow<'a, str>>>(mut self, join: S) -> Self {
         self.join = Some(join.into());
         self
     }
 
     /// Sets the secret for spectating a match
+    #[must_use]
     pub fn spectate<S: Into<Cow<'a, str>>>(mut self, spectate: S) -> Self {
         self.spectate = Some(spectate.into());
         self
     }
 
     /// Sets the secret for a specific, instanced match
+    #[must_use]
     pub fn r#match<S: Into<Cow<'a, str>>>(mut self, r#match: S) -> Self {
         self.r#match = Some(r#match.into());
         self
     }
 }
 
-impl<'a> Default for Secrets<'a> {
+impl Default for Secrets<'_> {
     fn default() -> Self {
         Self::new()
     }
@@ -429,7 +459,7 @@ impl<'a> Button<'a> {
     ///
     /// The URL must be 1-512 characters long
     pub fn new<L: Into<Cow<'a, str>>, U: Into<Cow<'a, str>>>(label: L, url: U) -> Self {
-        Button {
+        Self {
             label: label.into(),
             url: url.into(),
         }
