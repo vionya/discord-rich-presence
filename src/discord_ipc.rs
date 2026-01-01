@@ -141,14 +141,14 @@ pub trait DiscordIpc {
         let mut header = [0; 8];
 
         self.read(&mut header)?;
-        let (op, length) = unpack(header.to_vec())?;
+        let (op, length) = unpack(&header)?;
 
         let mut data = vec![0u8; length as usize];
         self.read(&mut data)?;
 
-        let response = String::from_utf8(data.to_vec()).map_err(|_| Error::RecvUtf8Response)?;
+        let response = str::from_utf8(&data).map_err(|_| Error::RecvUtf8Response)?;
         let json_data =
-            serde_json::from_str::<Value>(&response).map_err(|_| Error::JsonParseResponse)?;
+            serde_json::from_str::<Value>(response).map_err(|_| Error::JsonParseResponse)?;
 
         Ok((op, json_data))
     }
