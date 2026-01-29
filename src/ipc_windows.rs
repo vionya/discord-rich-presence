@@ -71,9 +71,10 @@ impl DiscordIpc for DiscordIpcClient {
         let data = json!({});
         if self.send(data, 2).is_ok() {}
 
-        let socket = self.socket.as_mut().ok_or(Error::NotConnected)?;
+        let mut socket = self.socket.take().ok_or(Error::NotConnected)?;
 
         socket.flush().map_err(Error::FlushError)?;
+        drop(socket);
 
         Ok(())
     }
