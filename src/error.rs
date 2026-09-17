@@ -11,8 +11,8 @@ pub enum Error {
     #[error("failed to decode header")]
     DecodeHeader,
 
-    /// Failed to recieve UTF-8 response.
-    #[error("failed to recieve valid UTF-8 response")]
+    /// Failed to receive UTF-8 response.
+    #[error("failed to receive valid UTF-8 response")]
     RecvUtf8Response,
     /// Failed to parse response json.
     #[error("failed to parse response json")]
